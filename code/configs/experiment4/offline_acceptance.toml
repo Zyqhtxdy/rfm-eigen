@@ -1,0 +1,23 @@
+reference_subdiv = 96
+refinement_subdivisions = [48, 64, 96]
+published_keff = 0.9688
+
+[drm]
+target_keff_error = 2.8218e-4
+target_flux_error = 8.9602e-2
+source = "Yang et al. (2023), DRM at 50000 epochs"
+
+[gipmnn]
+target_keff_error = 4.0370e-4
+target_flux_error = 8.5688e-2
+source = "Yang et al. (2023), Table 11"
+
+[pc_gipmnn]
+target_keff_error = 3.0812e-4
+target_flux_error = 4.7381e-2
+source = "Yang et al. (2023), Table 11"
+
+[rfm]
+target_keff_error = 2.8218e-4
+target_flux_error = 4.7381e-2
+source = "comparison target only; never used for RFM selection"

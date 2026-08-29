@@ -1,0 +1,32 @@
+{
+  "code_sha256": "491db71121a16657e76176954ba574db852a24a9a668b628de244f7fd9caff77",
+  "file_sha256": {
+    "experiment5_rfm_timed.csv": "0b16d6c14850fcf95f126d142c55365b4bd7bb09599d14bfcdaf32eaa469f527",
+    "experiment5_wg_timed.csv": "dac5da600b3669ba1373b45be1532872cb9f22dd7b56eccdf647bef408ef91d2"
+  },
+  "reference": {
+    "energy": 5.8505871135,
+    "lambda": 16.6299951125
+  },
+  "repeats": 5,
+  "run": "exp5_20260822T145114.312820Z",
+  "seeds": [
+    2086155103,
+    2086155137,
+    2086155179,
+    2086155221,
+    2086155263
+  ],
+  "threads": "1",
+  "timing_scope": "basis/mesh construction + assembly + solve",
+  "wg_primary_epsilon": 0.0,
+  "wg_primary_epsilon_status": "classical h^{-1} stabilization; not a source-exact parameter and not selected from Table 7",
+  "wg_replication_gate": {
+    "criterion": "primary-epsilon n=128 absolute errors versus the independent reference must be no more than 1.05 times the published Table 7 errors",
+    "paper_level_pass": true,
+    "paper_table7_n128": {
+      "energy": 5.850096,
+      "lambda": 16.629569
+    }
+  }
+}

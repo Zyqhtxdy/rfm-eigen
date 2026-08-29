@@ -1,0 +1,50 @@
+{
+  "candidate": {
+    "name": "double_kink_q2.42_s8.5",
+    "kind": "double_kink",
+    "amplitude": 20.0,
+    "location": 0.37,
+    "width": 0.0,
+    "q": 2.42,
+    "frequency_scale": 8.5
+  },
+  "potential": "V(t)=2+20(|t-0.37|+0.7|t-0.63|)",
+  "reaction": "c(x,y)=V(x)+V(y)",
+  "target_1d_pair_one_based": [
+    2,
+    3
+  ],
+  "target_global_indices": [
+    7,
+    8
+  ],
+  "lambda_star": 149.91769837259983,
+  "n_values": [
+    128,
+    160,
+    216,
+    288,
+    384,
+    512,
+    672,
+    896
+  ],
+  "samples": 20,
+  "seed_rule": "2032080000+137*N+sample",
+  "assembly_composite_order_per_interval": 32,
+  "evaluation_tensor_order": 132,
+  "cumulative_tensor_order": 84,
+  "reference_modes": 112,
+  "reference_composite_order_per_interval": 96,
+  "gap_q90_slope": -0.5584753060501786,
+  "gap_q90_slope_bootstrap_95": [
+    -0.6352795733308533,
+    -0.5204324660922578
+  ],
+  "eta_q90_slope": -0.5888268846128942,
+  "eigenvalue_q90_slope": -1.085611847802776,
+  "eigenvalue_q90_slope_bootstrap_95": [
+    -1.232068295449689,
+    -1.0108757208940442
+  ]
+}

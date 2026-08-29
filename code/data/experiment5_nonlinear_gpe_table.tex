@@ -1,0 +1,23 @@
+\begin{table}[!htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{The shifted Gross--Pitaevskii problem, for the weak Galerkin scheme and the RFM. RFM entries are medians over five independent feature draws, each solved five times for the clock.}
+\label{tab:nonlinear_gpe_comparison}
+\begin{tabular}{llrrr}
+\toprule
+method & resolution & time (s) & \(\lvert\lambda-\lambda_{\rm ref}\rvert\) & \(\lvert E-E_{\rm ref}\rvert\)\\
+\midrule
+WG & \(h=1/16\) & 0.17\,[0.14,0.17] & \(1.68\times 10^{-2}\) & \(2.02\times 10^{-2}\)\\
+WG & \(h=1/32\) & 0.59\,[0.58,0.60] & \(5.96\times 10^{-3}\) & \(6.91\times 10^{-3}\)\\
+WG & \(h=1/64\) & 2.44\,[2.40,2.48] & \(1.65\times 10^{-3}\) & \(1.91\times 10^{-3}\)\\
+WG & \(h=1/128\) & 13.01\,[12.91,13.25] & \(4.26\times 10^{-4}\) & \(4.91\times 10^{-4}\)\\
+\midrule
+RFM & \(N=128\) & 0.40\,[0.35,0.66] & \begin{tabular}[t]{@{}r@{}}\(1.11\times 10^{-2}\)\\\([7.04\times 10^{-3},3.05\times 10^{-2}]\)\end{tabular} & \begin{tabular}[t]{@{}r@{}}\(3.13\times 10^{-3}\)\\\([2.39\times 10^{-3},4.98\times 10^{-3}]\)\end{tabular}\\
+RFM & \(N=256\) & 0.99\,[0.85,1.49] & \begin{tabular}[t]{@{}r@{}}\(1.78\times 10^{-4}\)\\\([3.79\times 10^{-5},6.05\times 10^{-4}]\)\end{tabular} & \begin{tabular}[t]{@{}r@{}}\(1.87\times 10^{-5}\)\\\([5.91\times 10^{-6},5.49\times 10^{-5}]\)\end{tabular}\\
+RFM & \(N=384\) & 1.72\,[1.31,2.24] & \begin{tabular}[t]{@{}r@{}}\(9.26\times 10^{-6}\)\\\([2.89\times 10^{-6},3.79\times 10^{-5}]\)\end{tabular} & \begin{tabular}[t]{@{}r@{}}\(9.82\times 10^{-7}\)\\\([6.88\times 10^{-7},2.77\times 10^{-6}]\)\end{tabular}\\
+RFM & \(N=512\) & 2.02\,[1.55,2.67] & \begin{tabular}[t]{@{}r@{}}\(1.67\times 10^{-6}\)\\\([3.34\times 10^{-7},4.52\times 10^{-6}]\)\end{tabular} & \begin{tabular}[t]{@{}r@{}}\(4.41\times 10^{-7}\)\\\([3.35\times 10^{-7},6.22\times 10^{-7}]\)\end{tabular}\\
+RFM & \(N=768\) & 2.77\,[2.59,3.41] & \begin{tabular}[t]{@{}r@{}}\(2.05\times 10^{-7}\)\\\([9.91\times 10^{-8},4.63\times 10^{-7}]\)\end{tabular} & \begin{tabular}[t]{@{}r@{}}\(1.38\times 10^{-7}\)\\\([1.01\times 10^{-7},1.47\times 10^{-7}]\)\end{tabular}\\
+\bottomrule
+\end{tabular}
+\end{table}

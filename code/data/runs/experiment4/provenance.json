@@ -1,0 +1,52 @@
+{
+  "code_sha256": "2478488c6e68844063fae4b70cf98b40bcf8e31cd639b7f1f53b41de96ab53af",
+  "config": {
+    "assembly": "closed-form cell integrals, no quadrature",
+    "device": "cuda",
+    "dtype": "float64",
+    "features": 6000,
+    "frequency_radius": 105.0,
+    "layout_sha256": "95db718695154963523f1a356a4b047d33c281e60c3c6070c0ae506ffdbfa643",
+    "method": "rfm",
+    "neural_epochs": 61750,
+    "neural_method": "drm",
+    "reference_refinement": 48,
+    "seeds": [
+      2026071201,
+      2026071202,
+      2026071203,
+      2026071204,
+      2026071205,
+      2026071206,
+      2026071207,
+      2026071208,
+      2026071209,
+      2026071210,
+      2026071211,
+      2026071212,
+      2026071213,
+      2026071214,
+      2026071215,
+      2026071216,
+      2026071217,
+      2026071218,
+      2026071219,
+      2026071220
+    ],
+    "truncation": 1e-12
+  },
+  "config_sha256": "4f46f9947c7ccf4cf80ed300844a511d4bae4cfe9c83e30816aa883d5b8cb047",
+  "experiment": "experiment4",
+  "host": "DESKTOP-U6ILI26",
+  "numpy": "2.5.1",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "processor": "Intel64 Family 6 Model 158 Stepping 10, GenuineIntel",
+  "python": "3.12.13",
+  "run_id": "draws20",
+  "started_utc": "2026-08-27T12:43:32Z",
+  "threads": {
+    "MKL_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1"
+  }
+}

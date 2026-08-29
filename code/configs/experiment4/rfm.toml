@@ -1,0 +1,16 @@
+seed = 2026071104
+reporting_seeds = [2026071201, 2026071202, 2026071203, 2026071204, 2026071205]
+reference_subdiv = 48
+selection_reference_subdiv = 24
+feature_counts = [5200, 6000]
+frequency_radii = [100.0, 105.0]
+energy_cutoffs = [1.0e-12]
+search_result_name = "rfm_random_search"
+selection_relative_tolerance = 0.0
+selection_target_keff_error = 2.8218e-4
+selection_target_flux_error = 4.7381e-2
+selection_rule = "minimum coarse-reference source-target-normalized two-metric score"
+final_features = 6000
+final_frequency_radius = 105.0
+final_energy_cutoff = 1.0e-12
+result_name = "rfm_random_fourier"

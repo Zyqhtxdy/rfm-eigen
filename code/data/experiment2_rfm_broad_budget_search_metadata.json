@@ -1,0 +1,18 @@
+{
+  "reference_lambda": 699.4599275385291,
+  "budgets": [
+    768,
+    1280
+  ],
+  "trials": 3,
+  "base_seed": 2033071400,
+  "seed_rule": "base_seed+100000*variant_index+100*N+trial",
+  "quadrature_order": 44,
+  "variants": [
+    "broad_carrier"
+  ],
+  "anchor_degrees": [
+    0
+  ],
+  "selection_metric": "median relative eigenvalue error over tuning seeds"
+}

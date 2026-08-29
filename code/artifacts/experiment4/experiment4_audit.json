@@ -1,0 +1,90 @@
+{
+  "reference_keff": 0.9688327948382291,
+  "baseline_keff_target": 2.1187506632059932e-05,
+  "baseline_flux_target": 0.02680886937517324,
+  "rfm_passed_both_metrics": true,
+  "rfm_all_draws_passed_both_metrics": false,
+  "rfm_selection": {
+    "selection_rule": "minimum coarse-reference source-target-normalized two-metric score",
+    "selection_relative_tolerance": 0.0,
+    "reference_subdiv": 24,
+    "reference_assisted": true,
+    "normalization_target_keff_error": 0.00028218,
+    "normalization_target_flux_error": 0.047381,
+    "normalization_source": "Yang et al. (2023), Tables 10 and 11",
+    "best": {
+      "seed": 2026071104,
+      "features": 6000,
+      "rank": 5424,
+      "frequency_radius": 105.0,
+      "cutoff": 1e-12,
+      "keff": 0.9688125011322508,
+      "keff_error": 3.263222088180998e-05,
+      "flux_error": 0.0090819581169595,
+      "source_target_normalized_score": 0.19167932540384333,
+      "seconds": 492.3232328000013
+    },
+    "selected": {
+      "seed": 2026071104,
+      "features": 6000,
+      "rank": 5424,
+      "frequency_radius": 105.0,
+      "cutoff": 1e-12,
+      "keff": 0.9688125011322508,
+      "keff_error": 3.263222088180998e-05,
+      "flux_error": 0.0090819581169595,
+      "source_target_normalized_score": 0.19167932540384333,
+      "seconds": 492.3232328000013
+    }
+  },
+  "comparison": [
+    {
+      "method": "drm",
+      "resolution": 61750,
+      "keff": 0.9687516094656505,
+      "keff_error": 8.37970937928192e-05,
+      "keff_error_min": 8.37970937928192e-05,
+      "keff_error_max": 8.37970937928192e-05,
+      "flux_error": 0.02680886937517324,
+      "flux_error_min": 0.02680886937517324,
+      "flux_error_max": 0.02680886937517324,
+      "seconds": 4237.393011299954
+    },
+    {
+      "method": "gipmnn",
+      "resolution": 419000,
+      "keff": 0.9688122676869632,
+      "keff_error": 2.1187506632059932e-05,
+      "keff_error_min": 2.1187506632059932e-05,
+      "keff_error_max": 2.1187506632059932e-05,
+      "flux_error": 0.04429625035923914,
+      "flux_error_min": 0.04429625035923914,
+      "flux_error_max": 0.04429625035923914,
+      "seconds": 28497.71229159995
+    },
+    {
+      "method": "pc_gipmnn",
+      "resolution": 555000,
+      "keff": 0.968722315583888,
+      "keff_error": 0.00011403335532175413,
+      "keff_error_min": 0.00011403335532175413,
+      "keff_error_max": 0.00011403335532175413,
+      "flux_error": 0.027461192374033796,
+      "flux_error_min": 0.027461192374033796,
+      "flux_error_max": 0.027461192374033796,
+      "seconds": 53885.525947599905
+    },
+    {
+      "method": "rfm",
+      "resolution": 6000,
+      "keff": 0.9688125367698839,
+      "keff_error": 2.090976735428501e-05,
+      "keff_error_min": 2.0840522438747984e-05,
+      "keff_error_max": 2.4555707495744557e-05,
+      "flux_error": 0.006616625564613875,
+      "flux_error_min": 0.00659132868836974,
+      "flux_error_max": 0.00679277352284005,
+      "seconds": 493.67219650000334
+    }
+  ]
+}

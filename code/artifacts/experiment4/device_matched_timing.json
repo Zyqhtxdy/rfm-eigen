@@ -1,0 +1,39 @@
+{
+  "gpu": "NVIDIA GeForce RTX 2080",
+  "methods": {
+    "drm": {
+      "device": "cuda",
+      "dtype": "float32",
+      "scope": "complete training through the stopping criterion",
+      "seconds": 4237.393011299954
+    },
+    "gipmnn": {
+      "device": "cuda",
+      "dtype": "float32",
+      "scope": "complete training through the stopping criterion",
+      "seconds": 28497.71229159995
+    },
+    "pc_gipmnn": {
+      "device": "cuda",
+      "dtype": "float32",
+      "scope": "complete training through the stopping criterion",
+      "seconds": 53885.52594759991
+    },
+    "rfm": {
+      "device": "cuda",
+      "draws": 5,
+      "dtype": "float64",
+      "note": "float64 is required by the 1e-12 mass-matrix threshold and runs at a fraction of the float32 rate on this card, so the comparison is conservative for the RFM",
+      "scope": "feature sampling, assembly, numerical-rank determination, eigensolution and field evaluation",
+      "seconds": 13.280412300024182,
+      "seconds_max": 18.46309160022065,
+      "seconds_min": 13.203899499494582
+    }
+  },
+  "purpose": "device-matched wall times for Table 8; the RFM runs on the same GPU on which the three neural baselines were trained",
+  "source_directory": "experiments/section4_fair/results/threads6",
+  "sources": {
+    "exp4_baselines.csv": "9f74198a8aacfacd0f9fccde21584bb32639134a9edd161c88a423f67be0ea37",
+    "exp4_rfm_cuda.csv": "18c4716504a925d831255984992b16fc59b73372d1395d38231a3be5dd1954ff"
+  }
+}

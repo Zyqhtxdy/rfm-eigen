@@ -1,0 +1,6 @@
+protocol_status = "confirmatory_new_seed_set_locked_before_execution"
+baseline_seeds = [202608150401, 202608150402, 202608150403]
+rfm_seeds = [202608150411, 202608150412, 202608150413, 202608150414, 202608150415]
+report_all_seeds = true
+comparison_device = "cuda"
+historical_results_may_initialize_or_select_current_runs = false

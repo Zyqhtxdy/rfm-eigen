@@ -1,0 +1,2 @@
+interior_points,degrees_of_freedom,lambda,energy,stationarity_residual,iterations,wall_seconds
+128,16384,16.629995112518234,5.850587113514711,7.868525161984762e-11,149,0.7982626999728382

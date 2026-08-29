@@ -1,0 +1,41 @@
+{
+  "code_sha256": "2478488c6e68844063fae4b70cf98b40bcf8e31cd639b7f1f53b41de96ab53af",
+  "config": {
+    "device": "cpu",
+    "dimension": 10,
+    "eigenvalues_reported": 12,
+    "feature_counts": [
+      128,
+      256,
+      384,
+      512
+    ],
+    "integration": "scrambled Sobol, 200000 points, beta22 density",
+    "method": "rfm",
+    "potential_scale": 20.0,
+    "potentials": [
+      "square",
+      "exp"
+    ],
+    "reference_grid": 20000,
+    "reference_rule": "second-order finite difference, tensor sums by heap",
+    "scramble_seed_rule": "203406 + 17 * len(potential)",
+    "seed_rule": "20260603+100000*len(potential)+1000*N+97*trial+200",
+    "trials": 20,
+    "truncation_tolerance": 1e-05
+  },
+  "config_sha256": "55cfb8bb56dd0d8ab040adb4700e0bf4a028ec7e3299e2c6a55c559b7665c84c",
+  "experiment": "experiment3",
+  "host": "DESKTOP-U6ILI26",
+  "numpy": "2.5.1",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "processor": "Intel64 Family 6 Model 158 Stepping 10, GenuineIntel",
+  "python": "3.12.13",
+  "run_id": "draws20",
+  "started_utc": "2026-08-27T14:34:07Z",
+  "threads": {
+    "MKL_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1"
+  }
+}

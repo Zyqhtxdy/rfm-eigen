@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# A rerun writes here.  The recorded output the article was written from is in
+# code/data and is committed; a rerun is the reader's own and is not.
+code/output/
+
+# figures are regenerated from code/data, but the PDFs the article includes are
+# committed, so only the PNG previews the builders write alongside them are not
+figures/*.png
+
+# operating system
+.DS_Store
+Thumbs.db
+desktop.ini

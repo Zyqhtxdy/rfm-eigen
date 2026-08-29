@@ -1,0 +1,32 @@
+# The three packages were written to different widths -- the solver to 88, the
+# reactor reproduction and the asset builders to 100 -- so the wider one is what
+# the repository checks against, and what is selected are the rules that catch a
+# defect rather than a habit.
+line-length = 100
+target-version = "py311"
+
+[lint]
+select = ["E", "F", "I", "UP", "B"]
+# A line that runs long inside a formula, a path or a caption is not a defect.
+ignore = ["E501"]
+
+# The modules under `problems/` and `baselines/` that carry the nonlinear
+# experiments were relocated with their numerical cores untouched, so that the
+# recorded results are reproduced exactly.  Two of the default checks disagree
+# with how that code is written and are switched off for those files rather than
+# acted on, because acting on them would mean editing solver internals for
+# style: `B905` would add `strict=` to zips over paired arrays whose lengths are
+# established elsewhere, and `B023` flags closures that are called inside the
+# loop that binds them, which is correct here but not provably so.
+[lint.per-file-ignores]
+"rfmeig/problems/dipolar*.py" = ["B905", "B023", "B007"]
+"rfmeig/baselines/gflm_ktm*.py" = ["B905"]
+"rfmeig/baselines/weak_galerkin.py" = ["B023"]
+"rfmeig/nonlinear.py" = ["B007"]
+"rfmeig/nonlinear_complex.py" = ["B007"]
+# The reactor assets pin the plotting style before importing anything that
+# touches matplotlib, which is what the module-level call above its imports is
+# for; moving it would change every figure it writes.
+"iaea_repro/paper_assets.py" = ["E402", "B007", "B905"]
+"iaea_repro/rfm.py" = ["B905"]
+"paper_assets/assets.py" = ["B905"]

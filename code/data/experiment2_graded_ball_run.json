@@ -1,0 +1,306 @@
+{
+  "contrast": 3.0,
+  "exact": [
+    24.319894175972067,
+    46.33943560990878,
+    46.33943560990878,
+    46.33943560990878,
+    75.53284738439132,
+    77.40213113625026,
+    77.40213113625026,
+    77.40213113625026,
+    77.40213113625026,
+    77.40213113625026
+  ],
+  "passed": true,
+  "problem": "graded_ball",
+  "quadrature_sensitivity": [
+    {
+      "error": 2.6808758064872104e-05,
+      "level": 22
+    },
+    {
+      "error": 2.6808981638739073e-05,
+      "level": 28
+    },
+    {
+      "error": 2.6808922002999025e-05,
+      "level": 36
+    }
+  ],
+  "rows": [
+    {
+      "assemble_seconds": 0.013312600000062957,
+      "degrees_of_freedom": 63,
+      "median_error": 0.35621926680054916,
+      "median_seconds": 0.02107640000031097,
+      "method": "P2 FEM",
+      "setting": "h=1/1",
+      "solve_seconds": 0.007763800000248011,
+      "subdivisions": 1
+    },
+    {
+      "assemble_seconds": 0.0346865000001344,
+      "degrees_of_freedom": 575,
+      "median_error": 0.043696961396821284,
+      "median_seconds": 0.05570999999963533,
+      "method": "P2 FEM",
+      "setting": "h=1/2",
+      "solve_seconds": 0.023963099999491533,
+      "subdivisions": 2
+    },
+    {
+      "assemble_seconds": 0.21910249999928055,
+      "degrees_of_freedom": 4991,
+      "median_error": 0.006349881571978268,
+      "median_seconds": 0.900829000000158,
+      "method": "P2 FEM",
+      "setting": "h=1/3",
+      "solve_seconds": 0.6781767000002219,
+      "subdivisions": 3
+    },
+    {
+      "assemble_seconds": 2.765991999999642,
+      "degrees_of_freedom": 41727,
+      "median_error": 0.0007880851895140736,
+      "median_seconds": 59.910854499999914,
+      "method": "P2 FEM",
+      "setting": "h=1/4",
+      "solve_seconds": 66.21623100000033,
+      "subdivisions": 4
+    },
+    {
+      "admissible": 125,
+      "basis_functions": 343,
+      "degree": 6,
+      "grid_per_axis": 35,
+      "max_error": 0.12764233475985443,
+      "median_error": 0.12764233475985443,
+      "median_seconds": 1.029099600000336,
+      "method": "Eig-PIELM",
+      "min_error": 0.12764233475985443,
+      "setting": "deg=6"
+    },
+    {
+      "admissible": 343,
+      "basis_functions": 729,
+      "degree": 8,
+      "grid_per_axis": 45,
+      "max_error": 0.03434098474664288,
+      "median_error": 0.03434098474664288,
+      "median_seconds": 4.4874455999997735,
+      "method": "Eig-PIELM",
+      "min_error": 0.03434098474664288,
+      "setting": "deg=8"
+    },
+    {
+      "admissible": 513,
+      "basis_functions": 1000,
+      "degree": 9,
+      "grid_per_axis": 50,
+      "max_error": 0.0274550654356141,
+      "median_error": 0.0274550654356141,
+      "median_seconds": 9.30515270000069,
+      "method": "Eig-PIELM",
+      "min_error": 0.0274550654356141,
+      "setting": "deg=9"
+    },
+    {
+      "admissible": 735,
+      "basis_functions": 1331,
+      "degree": 10,
+      "grid_per_axis": 45,
+      "max_error": 0.006800356676875022,
+      "median_error": 0.006800356676875022,
+      "median_seconds": 11.209923999999774,
+      "method": "Eig-PIELM",
+      "min_error": 0.006800356676875022,
+      "setting": "deg=10"
+    },
+    {
+      "clusters": [
+        {
+          "identified": 10,
+          "level": 46.33943560990878,
+          "multiplicity": 3,
+          "relative_width": 0.2821121278124334,
+          "separation": 0.5936961412552632
+        },
+        {
+          "identified": 20,
+          "level": 77.40213113625026,
+          "multiplicity": 5,
+          "relative_width": 0.20739485813316075,
+          "separation": 8.587676424321836
+        }
+      ],
+      "draws": 20,
+      "features": 100,
+      "max_error": 0.989413780987554,
+      "max_seconds": 0.08366690000002563,
+      "median_error": 0.4564724772847462,
+      "median_retained": 100.0,
+      "median_seconds": 0.07444149999992078,
+      "method": "RFM",
+      "min_error": 0.16782057892067723,
+      "min_seconds": 0.07288030000017898,
+      "quadrature_level": 14,
+      "scale": 6.0,
+      "setting": "N=100"
+    },
+    {
+      "clusters": [
+        {
+          "identified": 20,
+          "level": 46.33943560990878,
+          "multiplicity": 3,
+          "relative_width": 0.005128612834698165,
+          "separation": 0.01079300515565543
+        },
+        {
+          "identified": 20,
+          "level": 77.40213113625026,
+          "multiplicity": 5,
+          "relative_width": 0.006452327570800706,
+          "separation": 0.26717393989676413
+        }
+      ],
+      "draws": 20,
+      "features": 200,
+      "max_error": 0.1467573937136185,
+      "max_seconds": 0.21350529999926948,
+      "median_error": 0.01624841047875258,
+      "median_retained": 200.0,
+      "median_seconds": 0.20266515000002983,
+      "method": "RFM",
+      "min_error": 0.0047046858847555875,
+      "min_seconds": 0.19839610000053653,
+      "quadrature_level": 16,
+      "scale": 6.0,
+      "setting": "N=200"
+    },
+    {
+      "clusters": [
+        {
+          "identified": 20,
+          "level": 46.33943560990878,
+          "multiplicity": 3,
+          "relative_width": 3.62469967758295e-05,
+          "separation": 7.628066997605166e-05
+        },
+        {
+          "identified": 20,
+          "level": 77.40213113625026,
+          "multiplicity": 5,
+          "relative_width": 0.00022155865846887332,
+          "separation": 0.009174162199893494
+        }
+      ],
+      "draws": 20,
+      "features": 400,
+      "max_error": 0.001167280139387271,
+      "max_seconds": 0.6774208999995608,
+      "median_error": 0.0006711633522025329,
+      "median_retained": 400.0,
+      "median_seconds": 0.6366931499997008,
+      "method": "RFM",
+      "min_error": 0.0003965212871331254,
+      "min_seconds": 0.6200705999999627,
+      "quadrature_level": 18,
+      "scale": 6.0,
+      "setting": "N=400"
+    },
+    {
+      "clusters": [
+        {
+          "identified": 20,
+          "level": 46.33943560990878,
+          "multiplicity": 3,
+          "relative_width": 2.979025589164229e-06,
+          "separation": 6.26926609182642e-06
+        },
+        {
+          "identified": 20,
+          "level": 77.40213113625026,
+          "multiplicity": 5,
+          "relative_width": 3.863901898335961e-05,
+          "separation": 0.0015999403040613091
+        }
+      ],
+      "draws": 20,
+      "features": 600,
+      "max_error": 0.0001912466431085934,
+      "max_seconds": 1.368184800000563,
+      "median_error": 0.00013277497606015935,
+      "median_retained": 587.5,
+      "median_seconds": 1.3263013000000683,
+      "method": "RFM",
+      "min_error": 8.060766397197492e-05,
+      "min_seconds": 1.3071878999999171,
+      "quadrature_level": 20,
+      "scale": 6.0,
+      "setting": "N=600"
+    },
+    {
+      "clusters": [
+        {
+          "identified": 20,
+          "level": 46.33943560990878,
+          "multiplicity": 3,
+          "relative_width": 1.0847873812502218e-06,
+          "separation": 2.282901083780612e-06
+        },
+        {
+          "identified": 20,
+          "level": 77.40213113625026,
+          "multiplicity": 5,
+          "relative_width": 6.2387668115883985e-06,
+          "separation": 0.0002583309497013646
+        }
+      ],
+      "draws": 20,
+      "features": 900,
+      "max_error": 4.640632532293888e-05,
+      "max_seconds": 2.8482057000001078,
+      "median_error": 3.218713858584553e-05,
+      "median_retained": 754.0,
+      "median_seconds": 2.7671564000002036,
+      "method": "RFM",
+      "min_error": 2.230735337939389e-05,
+      "min_seconds": 2.6777021999996578,
+      "quadrature_level": 22,
+      "scale": 6.0,
+      "setting": "N=900"
+    }
+  ],
+  "tuning": {
+    "baseline_rule": "each baseline at the setting minimizing its own error",
+    "rfm_probe_discrepancy": 0.00028544429904088454,
+    "rfm_rule": "blind: least draw-to-draw movement, exact spectrum not used",
+    "rfm_scale": 6.0
+  },
+  "verdict": {
+    "Eig-PIELM": {
+      "accuracy_factor": 211.27558943265356,
+      "baseline": "deg=10",
+      "baseline_error": 0.006800356676875022,
+      "baseline_seconds": 11.209923999999774,
+      "beaten": true,
+      "matched_setting": "N=400",
+      "our_best_error": 3.218713858584553e-05,
+      "our_best_seconds": 2.7671564000002036,
+      "speed_factor_at_matched_accuracy": 17.606478097031577
+    },
+    "P2 FEM": {
+      "accuracy_factor": 24.484474984074488,
+      "baseline": "h=1/4",
+      "baseline_error": 0.0007880851895140736,
+      "baseline_seconds": 59.910854499999914,
+      "beaten": true,
+      "matched_setting": "N=400",
+      "our_best_error": 3.218713858584553e-05,
+      "our_best_seconds": 2.7671564000002036,
+      "speed_factor_at_matched_accuracy": 94.09690445079873
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "construction": "W_tau=span{u_j+tau*u_(j+8), j=1,...,6; u_7,u_8}",
+  "contamination_grid": [
+    0.0,
+    0.2,
+    0.35,
+    0.5,
+    0.55,
+    0.65,
+    0.75,
+    0.9,
+    1.1,
+    1.3,
+    1.55,
+    1.8,
+    2.2
+  ],
+  "trial_dimension": 8,
+  "target_global_indices": [
+    7,
+    8
+  ],
+  "potential": "V(t)=2+20(|t-0.37|+0.7|t-0.63|)",
+  "quadrature_order": 132,
+  "reference_1d_modes": 112,
+  "reference_composite_order_per_interval": 96
+}

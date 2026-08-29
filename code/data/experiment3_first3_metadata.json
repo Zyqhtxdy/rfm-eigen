@@ -1,0 +1,18 @@
+{
+  "rfm_source": "data/experiment3_qmc_common_budget_eigs.csv",
+  "rfm_trial_source": "data/experiment3_qmc_common_budget_trials.csv",
+  "rfm_generator": "rfm-repro exp3-rfm",
+  "rfm_aggregator": "rfm-repro exp3-aggregate",
+  "drm_progress_source": "data/ji2024_drm_validated_progress.csv",
+  "drm_terminal_source": "data/ji2024_drm_validated_terminal.csv",
+  "selected_rfm_size": {
+    "square": 512,
+    "exp": 512
+  },
+  "paper_epoch_budget": 100000,
+  "paper_figure_accuracy_threshold": 0.03,
+  "drm_selection": "minimum fixed-Sobol validation loss after a completed paper-budget-plus-plateau run",
+  "common_final_interior_point_budget": 200000,
+  "rfm_assembly": "full-dimensional scrambled Sobol QMC with beta22 importance sampling",
+  "rfm_mass_truncation_tolerance": 1e-05
+}

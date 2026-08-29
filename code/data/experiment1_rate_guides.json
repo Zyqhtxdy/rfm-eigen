@@ -1,0 +1,22 @@
+{
+  "calibration_budgets": [
+    128,
+    160,
+    216,
+    288,
+    384,
+    512,
+    672,
+    896
+  ],
+  "calibration_draws_per_budget": 20,
+  "calibration_seed_rule": "2032080000+137*N+sample",
+  "validation_seed_rule": "2031080000+137*N+sample",
+  "safety_factor": 1.1,
+  "gap_rate": -0.5,
+  "eigenvalue_rate": -1.0,
+  "gap_constant_raw": 0.008734390676894865,
+  "eigenvalue_constant_raw": 5.989721337908897e-05,
+  "gap_constant": 0.009607829744584353,
+  "eigenvalue_constant": 6.588693471699787e-05
+}

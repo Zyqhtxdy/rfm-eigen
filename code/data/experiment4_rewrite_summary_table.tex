@@ -1,0 +1,17 @@
+\begin{table}[!htbp]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\caption{Errors and computation times of the neural-network baselines and the RFM for the IAEA quarter-core benchmark. RFM entries are medians over twenty independent feature draws, with the observed range in brackets.}
+\label{tab:experiment4_iea_neutron}
+\begin{tabular}{lcccc}
+\toprule
+method & $k_{\rm eff}$ & $e_k$ & $e_\varphi$ & time (s)\\
+\midrule
+DRM & 0.96875161 & \(8.38\times 10^{-5}\) & \(2.68\times 10^{-2}\) & 4237.4\\
+GIPMNN & 0.96881227 & \(2.12\times 10^{-5}\) & \(4.43\times 10^{-2}\) & 28497.7\\
+PC-GIPMNN & 0.96872232 & \(1.14\times 10^{-4}\) & \(2.75\times 10^{-2}\) & 53885.5\\
+RFM & 0.96881253 & \begin{tabular}[t]{@{}c@{}}\(2.09\times 10^{-5}\)\\\([2.08\times 10^{-5},2.46\times 10^{-5}]\)\end{tabular} & \begin{tabular}[t]{@{}c@{}}\(6.62\times 10^{-3}\)\\\([6.58\times 10^{-3},6.79\times 10^{-3}]\)\end{tabular} & 13.3\\
+\bottomrule
+\end{tabular}
+\end{table}

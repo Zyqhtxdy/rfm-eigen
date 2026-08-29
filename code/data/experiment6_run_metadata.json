@@ -1,0 +1,61 @@
+{
+  "code_sha256": "09aabe74430c00e721d11137758117f2bc578d7fbc78374a54290f1db613d818",
+  "convergent_pairs_available": 77,
+  "device": "cpu",
+  "evaluation_excluded_from_timing": true,
+  "file_sha256": {
+    "experiment6_gflm_ktm_timed.csv": "0d927f72f62748ad15016cf9c629dea9b13b13338fe7036113899cd9b8654c6c",
+    "experiment6_rfm_timed.csv": "fef9ae3f66307094fb5dbbac2d432bb33c6754436f6b8ba4f59996663793b2c8"
+  },
+  "gflm_timing_scope": "one solve from the ground-state initial pair, matching the single RFM solve it is compared against; the one-time full 100-start search that identifies that pair is timed separately in ground_state_search.json and is not part of the per-call comparison",
+  "reference": {
+    "converged_candidates": 98,
+    "energy": 8.372703266188894,
+    "grid_size": 128,
+    "initial_combinations": 100,
+    "mesh_width": 0.25,
+    "mu1": 12.297654001643005,
+    "mu2": 12.484469268750951,
+    "source_rounding_pass": true,
+    "virial_residual": 1.996736109788344e-11
+  },
+  "reference_imported_from": "exp6_20260816T182826.967694Z",
+  "reference_recomputation_gaps": {
+    "energy": 0.0,
+    "mu1": 0.0,
+    "mu2": 0.0,
+    "virial_residual": 0.0
+  },
+  "repeats": 3,
+  "rfm_timing_scope": "basis sampling + assembly + solve",
+  "run": "exp6_20260822T103737.000108Z",
+  "seeds": [
+    2086156109,
+    2086156151,
+    2086156193
+  ],
+  "threads": "1",
+  "timed_initial_pairs": [
+    0,
+    6,
+    12,
+    16,
+    22,
+    26,
+    32,
+    36,
+    42,
+    46,
+    52,
+    58,
+    64,
+    69,
+    74,
+    79,
+    84,
+    89,
+    94,
+    99
+  ],
+  "timed_pair_selection_rule": "20 of 77 convergent pairs, taken at even spacing in the published Cartesian product order; the rule is fixed before any timing is observed"
+}

@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rfmeig"
+version = "1.0.0"
+description = "Numerical experiments for the random feature method applied to isolated multiple elliptic eigenvalues"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "pandas>=2.0",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+# the isoparametric P2 finite element baseline of Example 2
+fem = ["scikit-fem>=8.0"]
+# the neural baselines of Examples 3 and 4, and the Sobol generator whose
+# scrambles Example 3's integration rule is validated on
+neural = ["torch>=2.1"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["rfmeig*", "iaea_repro*", "paper_assets*"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM"]

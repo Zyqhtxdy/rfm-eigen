@@ -1,0 +1,26 @@
+{
+  "reference_lambda": 699.4599275385291,
+  "budgets": [
+    1024
+  ],
+  "trials": 3,
+  "base_seed": 2027071900,
+  "seed_rule": "base_seed+100*N+trial (paired across candidates)",
+  "quadrature_order": 44,
+  "variants": [
+    "carrier_width_2",
+    "h5_tail_015",
+    "h5_tail_020",
+    "h5_tail_030",
+    "h5_tail_035",
+    "h5_q_30",
+    "h5_q_38"
+  ],
+  "carrier_families": [
+    "harmonic5"
+  ],
+  "anchor_degrees": [
+    0
+  ],
+  "selection_metric": "median relative eigenvalue error over tuning seeds"
+}

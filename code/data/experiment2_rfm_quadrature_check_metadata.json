@@ -1,0 +1,32 @@
+{
+  "orders": [
+    40,
+    44,
+    48
+  ],
+  "cases": [
+    [
+      768,
+      0
+    ],
+    [
+      1024,
+      10
+    ],
+    [
+      1280,
+      0
+    ],
+    [
+      1280,
+      10
+    ],
+    [
+      1280,
+      19
+    ]
+  ],
+  "seed_rule": "2026070800+1000*N+trial",
+  "maximum_relative_eigenvalue_spread": 3.848516143212387e-05,
+  "maximum_finest_pair_relative_difference": 6.892155911577986e-06
+}

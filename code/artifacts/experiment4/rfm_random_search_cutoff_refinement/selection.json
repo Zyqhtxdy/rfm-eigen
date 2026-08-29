@@ -1,0 +1,33 @@
+{
+  "selection_rule": "minimum coarse-reference source-target-normalized two-metric score",
+  "selection_relative_tolerance": 0.0,
+  "reference_subdiv": 24,
+  "reference_assisted": true,
+  "normalization_target_keff_error": 0.00028218,
+  "normalization_target_flux_error": 0.047381,
+  "normalization_source": "Yang et al. (2023), Tables 10 and 11",
+  "best": {
+    "seed": 2026071104,
+    "features": 6000,
+    "rank": 5385,
+    "frequency_radius": 105.0,
+    "cutoff": 5e-12,
+    "keff": 0.9688120085078182,
+    "keff_error": 3.3140687026264964e-05,
+    "flux_error": 0.009104739650044009,
+    "source_target_normalized_score": 0.19216014119676683,
+    "seconds": 490.0598371999804
+  },
+  "selected": {
+    "seed": 2026071104,
+    "features": 6000,
+    "rank": 5385,
+    "frequency_radius": 105.0,
+    "cutoff": 5e-12,
+    "keff": 0.9688120085078182,
+    "keff_error": 3.3140687026264964e-05,
+    "flux_error": 0.009104739650044009,
+    "source_target_normalized_score": 0.19216014119676683,
+    "seconds": 490.0598371999804
+  }
+}

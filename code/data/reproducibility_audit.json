@@ -1,105 +1,71 @@
 {
-  "passed": true,
-  "experiment1": {
-    "passed": true,
-    "trials": 800,
-    "fixed_seed_rule": "2031080000 + 137*N + sample",
-    "gap_q90_slope": -0.5732278992089479,
-    "gap_q90_slope_bootstrap_95": [
-      -0.6046907291846557,
-      -0.552544021751879
-    ],
-    "eigenvalue_q90_slope": -1.1139121121441948,
-    "eigenvalue_q90_slope_bootstrap_95": [
-      -1.1763666670038295,
-      -1.0745880958630367
-    ],
-    "locked_guide_exceedances": 0,
-    "cumulative_ablation_levels": 13
-  },
-  "experiment2": {
-    "passed": true,
-    "rfm_trials": 60,
-    "drm_seeds": [
-      20260708,
-      20260709,
-      20260710
-    ],
-    "rfm_budgets": [
-      768,
-      1024,
-      1280
-    ],
-    "rfm_median_errors": {
-      "768": 0.000949809261330679,
-      "1024": 0.000708152096222382,
-      "1280": 0.0005743655984166668
+  "draw_counts": {
+    "experiment1_rewrite_summary_table.tex": {
+      "claimed_in_caption": 100,
+      "recorded_in_run": 100,
+      "source": "data/experiment1_theory_matched_trials.csv",
+      "match": true
     },
-    "rfm_max_error": 0.0011262444636400007,
-    "drm_median_error": 0.0015921138308396098,
-    "quadrature_44_to_48_max": 6.892155911577986e-06,
-    "baseline_acceptance": "minimum two-Sobol relative-error checkpoint after a plateau trajectory"
-  },
-  "experiment3": {
-    "passed": true,
-    "seed": 202406,
-    "terminal_error_range": [
-      0.02447317173248877,
-      0.02836503138430009
-    ],
-    "rfm_trial_rows": 120,
-    "common_interior_point_budget": 200000,
-    "qmc_density": "beta22",
-    "literature_level": "Ji et al. Figure 7 terminal range (approximately 2%-4%)"
-  },
-  "experiment4": {
-    "passed": true,
-    "baseline_seeds": [
-      2026071101,
-      2026071102,
-      2026071103
-    ],
-    "rfm_search_seed": 2026071104,
-    "rfm_reporting_seeds": [
-      2026071201,
-      2026071202,
-      2026071203,
-      2026071204,
-      2026071205
-    ],
-    "published_table_targets_reached": true,
-    "field_checkpoints_reproduce_table": true,
-    "rfm_solution_fields_recomputed": 5,
-    "rfm_search_cases": 4,
-    "geometry_sha256": "95db718695154963523f1a356a4b047d33c281e60c3c6070c0ae506ffdbfa643",
-    "reference_keff": {
-      "8": 0.9689393234441694,
-      "16": 0.9688613564702868,
-      "24": 0.968844116667466,
-      "32": 0.9688376324169399,
-      "48": 0.9688327948382291
+    "experiment2_rewrite_summary_table.tex": {
+      "claimed_in_caption": 20,
+      "recorded_in_run": 20,
+      "source": "data/experiment2_graded_ball_run.json",
+      "match": true
+    },
+    "experiment3_rewrite_summary_table.tex": {
+      "claimed_in_caption": 20,
+      "recorded_in_run": 20,
+      "source": "data/runs/experiment3/rfm_summary.csv",
+      "match": true
+    },
+    "experiment4_rewrite_summary_table.tex": {
+      "claimed_in_caption": 20,
+      "recorded_in_run": 20,
+      "source": "data/runs/experiment4/rfm_rows.csv",
+      "match": true
+    },
+    "experiment5_nonlinear_gpe_table.tex": {
+      "claimed_in_caption": 5,
+      "recorded_in_run": 5,
+      "source": "data/experiment5_rfm_timed.csv",
+      "match": true
+    },
+    "experiment6_dipolar_bec_table.tex": {
+      "claimed_in_caption": 10,
+      "recorded_in_run": 10,
+      "source": "data/experiment6_rfm_timed.csv",
+      "match": true
     }
   },
-  "experiment5": {
-    "passed": true,
-    "rfm_trials": 25,
-    "baseline_rows": 4,
-    "source_table_reproduced": true
+  "tables": {
+    "experiment1_rewrite_summary_table.tex": {
+      "sha256": "a9a4cc001fb1a968b64bfcd672028b07735b9c1e020d7cfad332f571840e41e2",
+      "rebuilt": false
+    },
+    "experiment2_rewrite_summary_table.tex": {
+      "sha256": "19260aa4f5a89036f86b779168c922eb53a1719ca11de08bb15a4b8a4ef56ec9",
+      "rebuilt": true,
+      "unchanged_by_rebuild": true
+    },
+    "experiment3_rewrite_summary_table.tex": {
+      "sha256": "3ed42ab349aa961710742f7a51ed4ca9c92c875908f651b21d7ca45d7ad9463e",
+      "rebuilt": true,
+      "unchanged_by_rebuild": true
+    },
+    "experiment4_rewrite_summary_table.tex": {
+      "sha256": "ae515e428732271290d03c7be19f8d170ee948664795fc70babd2aa4481300d3",
+      "rebuilt": false
+    },
+    "experiment5_nonlinear_gpe_table.tex": {
+      "sha256": "89b993d967a9e1488da4eff7c8e1ce1a8e7a7f1eaa911da70a8250fea64fdadd",
+      "rebuilt": true,
+      "unchanged_by_rebuild": true
+    },
+    "experiment6_dipolar_bec_table.tex": {
+      "sha256": "20f39d46b73cd15d9bc4085cc6e88e8fb5d23595ab12dce25e1611eae8e49207",
+      "rebuilt": true,
+      "unchanged_by_rebuild": true
+    }
   },
-  "experiment6": {
-    "passed": true,
-    "rfm_trials": 18,
-    "baseline_rows": 3,
-    "source_table_reproduced": true
-  },
-  "section4_consistency": {
-    "passed": true,
-    "experiments": 6,
-    "main_section_figures": 7,
-    "generated_tables": 6,
-    "appendix_convergence_figures": 1,
-    "fixed_protocol_checks": 6,
-    "method_traceability_checks": 7,
-    "nonstandard_method_names": 0
-  }
+  "passed": true
 }

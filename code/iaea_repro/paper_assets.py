@@ -505,7 +505,7 @@ def generate_experiment4_assets(
             keff_error = rf"\({_tex_sci(float(row['keff_error']))}\)"
             flux_error = rf"\({_tex_sci(float(row['flux_error']))}\)"
         lines.append(
-            f"{labels[method]} & {float(row['keff']):.8f} & "
+            f"{labels[method]} & {float(row['keff']):.6f} & "
             f"{keff_error} & {flux_error} & {float(row['seconds']):.1f}\\\\"
         )
         csv_rows.append(dict(row))

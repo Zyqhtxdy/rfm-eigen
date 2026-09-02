@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import hashlib
 import json
 import shutil
@@ -70,7 +71,11 @@ def page_size(fraction: float, height: float) -> tuple[float, float]:
 
 
 def write_text(path: Path, content: str) -> None:
-    path.write_text(content.rstrip() + "\n", encoding="utf-8")
+    """Write a generated file with the newlines .gitattributes expects, so
+    that a rebuild on Windows does not differ from the committed copy by
+    line endings alone."""
+    with io.open(path, "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(content.rstrip() + "\n")
 
 
 def tex_sci(value: float) -> str:
@@ -335,10 +340,11 @@ def build_experiment2_table() -> None:
         r"\small",
         r"\setlength{\tabcolsep}{5pt}",
         (
-            r"\caption{The first ten eigenvalues of the radially graded unit ball, for "
-            r"the isoparametric \(P_2\) finite element method, Eig-PIELM, and "
-            rf"the RFM. RFM entries are medians over {_spelled_count(draws)} "
-            r"independent feature draws, with the observed range in brackets.}"
+            r"\caption{Maximum relative errors over the first ten eigenvalues "
+            r"and computation times of the isoparametric \(P_2\) finite element "
+            r"method, Eig-PIELM, and the RFM for the radially graded unit ball. "
+            rf"RFM entries are medians over {_spelled_count(draws)} independent "
+            r"feature draws, with the observed range in brackets.}"
         ),
         r"\label{tab:ball_benchmark_summary}",
         r"\begin{tabular}{llrl}",
@@ -393,10 +399,7 @@ def _experiment3_rfm() -> pd.DataFrame:
     Only the first three ordered values are kept: they are what the source
     reports, and what the table and the figure carry.
     """
-    summary = EXPERIMENT3_RFM_RUN / "rfm_summary.csv"
-    if not summary.exists():
-        return pd.read_csv(DATA_DIR / "experiment3_qmc_common_budget_eigs.csv")
-    frame = pd.read_csv(summary)
+    frame = pd.read_csv(EXPERIMENT3_RFM_RUN / "rfm_summary.csv")
     return frame[frame["eigen_index"] <= 3].reset_index(drop=True)
 
 
@@ -634,7 +637,7 @@ def build_experiment6_table() -> None:
         r"\centering",
         r"\small",
         r"\setlength{\tabcolsep}{4pt}",
-        r"\caption{Errors and computation times of GFLM--KTM and the RFM for the rotating two-component dipolar condensate. RFM entries are medians over ten independent feature draws and GFLM--KTM entries over twenty published initial states, with the observed range in brackets.}",
+        r"\caption{Errors and computation times of GFLM--KTM and the RFM for the rotating two-component dipolar condensate. RFM entries are medians over ten independent feature draws and GFLM--KTM entries over twenty initial states from the product of the ten published ones, with the observed range in brackets.}",
         r"\label{tab:dipolar_bec_comparison}",
         r"\begin{tabular}{llrrrrr}",
         r"\toprule",

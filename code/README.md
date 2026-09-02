@@ -49,10 +49,26 @@ or, one at a time, from a session started in this directory:
 Rebuilding is byte-identical: the six `data/*_table.tex` files are unchanged by
 a rebuild against the committed output.
 
+## Checking that the tables still follow from the runs
+
+```bash
+python audit.py
+```
+
+This rebuilds every table whose builder runs from the committed data and
+compares it byte for byte with the copy in `data`, and it compares the number
+of draws each caption states with the number the corresponding run holds.  The
+second check is the one worth having: a caption that says twenty over a run of
+five is invisible to any hash.  The result is written to
+`data/reproducibility_audit.json`, and the command exits non-zero on failure.
+
+`data/core_artifact_sha256.csv` records the hash of every committed input, so a
+file that changed after the fact can be found without rerunning anything.
+
 ## Rerunning the experiments
 
 These recompute an experiment from its seeds and write a sealed run directory
-under `output`, carrying the code hash, the configuration, the library versions
+under `../output`, beside `code`, carrying the code hash, the configuration, the library versions
 and the thread count. They do not overwrite `data`.
 
 ```python

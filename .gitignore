@@ -16,11 +16,16 @@ venv/
 
 # A rerun writes here.  The recorded output the article was written from is in
 # code/data and is committed; a rerun is the reader's own and is not.
-code/output/
+output/
 
 # figures are regenerated from code/data, but the PDFs the article includes are
 # committed, so only the PNG previews the builders write alongside them are not
 figures/*.png
+
+# editors
+.idea/
+.vscode/
+*.swp
 
 # operating system
 .DS_Store

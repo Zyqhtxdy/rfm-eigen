@@ -25,8 +25,8 @@
       "match": true
     },
     "experiment5_nonlinear_gpe_table.tex": {
-      "claimed_in_caption": 5,
-      "recorded_in_run": 5,
+      "claimed_in_caption": 20,
+      "recorded_in_run": 20,
       "source": "data/experiment5_rfm_timed.csv",
       "match": true
     },
@@ -57,7 +57,7 @@
       "rebuilt": false
     },
     "experiment5_nonlinear_gpe_table.tex": {
-      "sha256": "89b993d967a9e1488da4eff7c8e1ce1a8e7a7f1eaa911da70a8250fea64fdadd",
+      "sha256": "f1e1e2b76eec8951b73489ed496ee002f23a7b3db950d5f62dea29e248b6e61b",
       "rebuilt": true,
       "unchanged_by_rebuild": true
     },

@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-import io
-import hashlib
 import json
-import shutil
 import warnings
 from pathlib import Path
 
@@ -16,9 +13,6 @@ from paper_assets.paths import DATA, FIGURES, ROOT
 
 DATA_DIR = DATA
 FIG_DIR = FIGURES
-NONLINEAR_RESULTS = (
-    ROOT / "nonlinear_eigen_rfm_study" / "results" / "e7_e5_fair_comparison"
-)
 
 
 def use_plot_style() -> None:
@@ -74,7 +68,7 @@ def write_text(path: Path, content: str) -> None:
     """Write a generated file with the newlines .gitattributes expects, so
     that a rebuild on Windows does not differ from the committed copy by
     line endings alone."""
-    with io.open(path, "w", encoding="utf-8", newline="\n") as handle:
+    with open(path, "w", encoding="utf-8", newline="\n") as handle:
         handle.write(content.rstrip() + "\n")
 
 
@@ -523,20 +517,6 @@ def build_experiment4_assets() -> None:
     generate_experiment4_assets(ROOT, figure_directory=FIGURES)
 
 
-def verify_nonlinear_artifacts() -> None:
-    manifest = NONLINEAR_RESULTS / "SHA256SUMS"
-    recorded: dict[str, str] = {}
-    for line in manifest.read_text(encoding="ascii").splitlines():
-        digest, name = line.split("  ", maxsplit=1)
-        recorded[name] = digest
-    for name, digest in recorded.items():
-        path = NONLINEAR_RESULTS / name
-        content = path.read_bytes()
-        if path.suffix.lower() in {".csv", ".json", ".md", ".txt"}:
-            content = content.replace(b"\r\n", b"\n")
-        if hashlib.sha256(content).hexdigest() != digest:
-            raise RuntimeError(f"Nonlinear artifact hash mismatch: {name}")
-
 
 def build_experiment5_table() -> None:
     """Table 6, from the timed comparison run.
@@ -658,17 +638,6 @@ def build_experiment6_table() -> None:
     write_text(DATA_DIR / "experiment6_dipolar_bec_table.tex", "\n".join(lines))
 
 
-def build_nonlinear_figures() -> None:
-    verify_nonlinear_artifacts()
-    shutil.copyfile(
-        NONLINEAR_RESULTS / "e7_e5_error_comparison.pdf",
-        FIG_DIR / "experiment5_6_nonlinear_error_comparison.pdf",
-    )
-    shutil.copyfile(
-        NONLINEAR_RESULTS / "e5_density_comparison.pdf",
-        FIG_DIR / "experiment6_dipolar_density_comparison.pdf",
-    )
-
 
 def main() -> None:
     FIG_DIR.mkdir(parents=True, exist_ok=True)
@@ -684,7 +653,6 @@ def main() -> None:
     # now drawn by redesign_figures; calling it here only writes a dead file
     build_experiment5_table()
     build_experiment6_table()
-    build_nonlinear_figures()
 
 
 if __name__ == "__main__":

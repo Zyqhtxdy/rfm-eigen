@@ -31,20 +31,36 @@
   ],
   "samples": 20,
   "seed_rule": "2032080000+137*N+sample",
-  "assembly_composite_order_per_interval": 32,
-  "evaluation_tensor_order": 132,
-  "cumulative_tensor_order": 84,
   "reference_modes": 112,
   "reference_composite_order_per_interval": 96,
-  "gap_q90_slope": -0.5584753060501786,
-  "gap_q90_slope_bootstrap_95": [
-    -0.6352795733308533,
-    -0.5204324660922578
+  "assembly_composite_order_per_interval": 512,
+  "evaluation_composite_order_per_interval": 512,
+  "subspace_composite_order_per_interval": 512,
+  "quadrature_orders_checked": [
+    128,
+    256,
+    512
   ],
-  "eta_q90_slope": -0.5888268846128942,
-  "eigenvalue_q90_slope": -1.085611847802776,
-  "eigenvalue_q90_slope_bootstrap_95": [
-    -1.232068295449689,
-    -1.0108757208940442
+  "reported_statistic": "arithmetic mean",
+  "draws_discarded": 0,
+  "truncation_tolerance": 1e-12,
+  "refinement_provenance": "experiment1_refinement_provenance.json",
+  "h1_gap_mean_slope": -0.630339168593591,
+  "h1_gap_q90_slope": -0.5584846617564025,
+  "h1_gap_mean_slope_bootstrap_95": [
+    -0.6604074287912653,
+    -0.6011857051470327
+  ],
+  "eta_f_h1_mean_slope": -0.5534745678717322,
+  "eta_f_h1_q90_slope": -0.5914015925817327,
+  "eta_f_h1_mean_slope_bootstrap_95": [
+    -0.5784118142804253,
+    -0.5282129956289727
+  ],
+  "cluster_relative_error_mean_slope": -1.2184240969190103,
+  "cluster_relative_error_q90_slope": -1.0856126276418903,
+  "cluster_relative_error_mean_slope_bootstrap_95": [
+    -1.2788366133861746,
+    -1.1607714076011202
   ]
 }

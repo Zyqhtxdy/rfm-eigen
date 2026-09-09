@@ -1,28 +1,9 @@
-r"""Example 3: a ten-dimensional Schrödinger operator on the unit cube.
+r"""Example 3: the ten-dimensional Schrodinger operator on the unit cube.
 
-The operator is
-
-.. math::
-
-    -\Delta u + \gamma\sum_{i=1}^{10}V(x_i)\,u=\lambda u\quad\text{in }(0,1)^{10},
-    \qquad u=0\text{ on the boundary},
-
-with :math:`\gamma=20` and either :math:`V(t)=t^2` or :math:`V(t)=e^{-\pi t}`.
-It is the benchmark of Ji et al. (2024), and the reason to run it is not that ten
-dimensions is large in itself, but that no quadrature rule of tensor type reaches
-it: a rule with even two points per direction has more than a thousand nodes, and
-the rules the other experiments use have more than :math:`10^{16}`.  What is used
-instead is a scrambled Sobol rule at two hundred thousand points, the same budget
-the neural baseline validates on, so that the two methods integrate the same way.
-
-Separability again supplies the reference.  Each one-dimensional problem is
-solved on a fine grid, and the ten-dimensional eigenvalues are the smallest sums
-of ten one-dimensional levels, which a heap enumerates without touching the full
-tensor grid.  The first three are reported; the second and third coincide,
-because exchanging which coordinate carries the excited level gives the same sum
-and a different eigenfunction, so the level is double.  A method that reports two
-different numbers there has split a multiple eigenvalue, which is exactly what
-Section 4 is about.
+The full-dimensional sampled pencil uses 2**22 scrambled Sobol points.
+Separate one-dimensional reference solves provide the reference eigenvalues.
+The first three values are reported, with the second and third belonging to
+a repeated level. Product integration is used only to evaluate fixed RFM fields.
 """
 
 from __future__ import annotations
@@ -46,11 +27,10 @@ TAIL_EXPONENT = 8.0
 #: problem has no wavevector to read -- so it is a blind choice, and is reported
 #: as such.
 FREQUENCY_SCALE = 2.0
-#: Points of the scrambled Sobol rule; the budget the neural baseline validates on.
-INTEGRATION_POINTS = 200_000
+#: Points used to assemble the RFM pencil; DRM training validation remains separate.
+INTEGRATION_POINTS = 2**22
 #: Base of the interior scramble seed; the potential's own seed is
-#: ``base + 17 * len(name)``, which is the rule the neural baseline's validator
-#: uses, so the two methods integrate the interior on the same nodes.
+#: ``base + 17 * len(name)``. Final evaluation uses a separate protocol.
 SCRAMBLE_SEED_BASE = 203_406
 #: Base of the boundary scramble seed.  Only the neural baseline needs it: its
 #: iterates are not zero on the boundary, so its functional carries a boundary

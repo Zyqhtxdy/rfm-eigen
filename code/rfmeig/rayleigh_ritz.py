@@ -10,8 +10,8 @@ evaluated at the quadrature points, and the bilinear forms
 
 are contracted against the quadrature weights.  Because the features lie in
 :math:`H_0^1(\Omega)` by construction, the resulting matrices are those of the
-continuous forms restricted to :math:`V_N`, and the min--max characterization
-applies pathwise.
+continuous forms restricted to :math:`V_N` up to quadrature error. The
+experiments check this error by refining the integration rule.
 
 The solve needs one further step.  A random basis is badly conditioned -- two
 features drawn close together are nearly parallel -- so the pencil is first
@@ -90,8 +90,9 @@ def assemble_pencil(
     else:
         # With a variable coefficient the weight and the coefficient are folded
         # into one contraction over the point and direction axes together.
+        coefficient = np.broadcast_to(np.asarray(diffusion, dtype=float), weights.shape)
         energy = np.einsum(
-            "q,q,qid,qjd->ij", weights, diffusion, gradients, gradients, optimize=True
+            "q,q,qid,qjd->ij", weights, coefficient, gradients, gradients, optimize=True
         )
     if not (np.isscalar(reaction) and float(reaction) == 0.0):
         energy += values.T @ ((weights * reaction)[:, None] * values)
@@ -312,6 +313,10 @@ def solve_energy_whitened(
     """
     if tolerance is None:
         tolerance = truncation_tolerance(energy.shape[0], energy.dtype)
+    if not np.isfinite(tolerance) or tolerance <= 0.0:
+        raise ValueError("the truncation tolerance must be finite and positive")
+    if count < 1:
+        raise ValueError("at least one eigenvalue must be requested")
 
     diagonal = np.diag(energy).copy()
     positive = diagonal > 0.0
@@ -374,8 +379,10 @@ def solve_mass_whitened(
     """
     if tolerance is None:
         tolerance = truncation_tolerance(mass.shape[0], mass.dtype)
-    if tolerance <= 0.0:
-        raise ValueError("the truncation tolerance must be positive")
+    if not np.isfinite(tolerance) or tolerance <= 0.0:
+        raise ValueError("the truncation tolerance must be finite and positive")
+    if count < 1:
+        raise ValueError("at least one eigenvalue must be requested")
 
     diagonal = np.diag(mass).copy()
     positive = diagonal > np.finfo(mass.dtype).tiny

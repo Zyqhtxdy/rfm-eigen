@@ -5,7 +5,7 @@ Python session started in this directory::
 
     >>> import reproduce
     >>> reproduce.table_2()
-    >>> reproduce.figure_3()
+    >>> reproduce.figure_2()
 
 or run every asset in one go::
 
@@ -28,7 +28,8 @@ comparison.
 
 from __future__ import annotations
 
-import sys
+import argparse
+import importlib
 
 # ---------------------------------------------------------------------------
 # the tables and figures, from the recorded output
@@ -37,7 +38,10 @@ import sys
 
 def _assets():
     from paper_assets import assets
+    from paper_assets.paths import DATA, FIGURES
 
+    DATA.mkdir(parents=True, exist_ok=True)
+    FIGURES.mkdir(parents=True, exist_ok=True)
     assets.use_plot_style()
     return assets
 
@@ -53,16 +57,7 @@ def figure_1() -> None:
 
 def table_1() -> None:
     """Empirical error statistics for the double eigenvalue of Example 1."""
-    _assets().plot_experiment1()
-
-
-def figure_2() -> None:
-    """Effect of perturbing the six modes below the target level."""
-    from paper_assets import redesign_figures
-    from paper_assets.paths import FIGURES
-
-    redesign_figures.use_publication_style()
-    redesign_figures.plot_experiment1_ablation(FIGURES)
+    _assets().build_experiment1_table()
 
 
 def table_2() -> None:
@@ -70,41 +65,40 @@ def table_2() -> None:
     _assets().build_experiment2_table()
 
 
-def figure_3() -> None:
-    """Maximum relative error against computation time, Example 2."""
-    _assets().plot_experiment2()
 
-
-def table_3() -> None:
-    """Relative errors of the first three ordered eigenvalues, Example 3."""
-    _assets().build_experiment3_table()
-
-
-def figure_4() -> None:
-    """The first three ordered Ritz values against the feature count."""
+def figure_2() -> None:
+    """The first three eigenvalue estimates against the feature count."""
     _assets().plot_experiment3()
 
 
 def example_4_assets() -> None:
-    """Table 5 and Figures 5 and 6: the IAEA quarter-core benchmark.
+    """Table 4 and Figures 3 and 4: the IAEA quarter-core benchmark.
 
     Needs the recorded reference and checkpoints under ``artifacts``.
     """
     _assets().build_experiment4_assets()
 
 
-def table_6() -> None:
+def example_4_figures() -> None:
+    """Redraw Figures 3 and 4 from recorded states, preserving all tables."""
+    from iaea_repro.paper_assets import generate_experiment4_assets
+    from paper_assets.paths import DATA, FIGURES, ROOT
+
+    generate_experiment4_assets(ROOT, FIGURES, figures_only=True, data_directory=DATA)
+
+
+def table_5() -> None:
     """The shifted Gross-Pitaevskii problem, Example 5."""
     _assets().build_experiment5_table()
 
 
-def table_7() -> None:
+def table_6() -> None:
     """The rotating two-component dipolar condensate, Example 6."""
     _assets().build_experiment6_table()
 
 
 def appendix_figures() -> None:
-    """Figures A.7 and A.8: the training histories of the neural baselines."""
+    """Appendix figures: the training histories of the neural baselines."""
     from paper_assets import redesign_figures
     from paper_assets.paths import FIGURES
 
@@ -120,17 +114,14 @@ def chinese_tables() -> None:
 
 
 def all_assets() -> None:
-    """Every table and figure the paper includes."""
+    """The five numerical result tables and six figures generated from the data."""
     for step in (
         figure_1,
-        figure_2,
         table_2,
-        figure_3,
-        table_3,
-        figure_4,
+        figure_2,
         example_4_assets,
+        table_5,
         table_6,
-        table_7,
         appendix_figures,
     ):
         print(f"  {step.__name__} ...", flush=True)
@@ -147,60 +138,69 @@ def example_1(run_id: str = "rerun") -> None:
 
     100 draws at each of eight feature counts; minutes.
     """
-    from rfmeig.experiments import exp1_interior_double
-
-    exp1_interior_double.main(["--run-id", run_id])
+    _run_example("exp1_interior_double", run_id)
 
 
 def example_2(run_id: str = "rerun") -> None:
-    """Section 4.1: a radially graded problem on the unit ball.
+    """Example 2: a radially graded problem on the unit ball.
 
     Three methods on one clock, 20 draws at each of five budgets; about ten
     minutes, of which the finest mesh is three.
     """
-    from rfmeig.experiments import exp2_graded_ball
-
-    exp2_graded_ball.main(["--run-id", run_id])
+    _run_example("exp2_graded_ball", run_id)
 
 
 def example_3(run_id: str = "rerun") -> None:
-    """Section 4.1: a ten-dimensional Schrodinger eigenproblem.
+    """Example 3: a ten-dimensional Schrodinger eigenproblem.
 
-    Quasi-Monte Carlo assembly on 200,000 points; hours.
+    Quasi-Monte Carlo assembly on 2**22 points and independent final integration; hours.
     """
-    from rfmeig.experiments import exp3_high_dimension
-
-    exp3_high_dimension.main(["--run-id", run_id])
+    _run_example("exp3_high_dimension", run_id)
 
 
 def example_4(run_id: str = "rerun") -> None:
-    """Section 4.1: the IAEA quarter-core benchmark, sampled space only.
+    """Example 4: the IAEA quarter-core benchmark, sampled space only.
 
     The three neural baselines are not rerun here; their recorded histories
     and checkpoints are under ``artifacts``, and retraining them takes days.
     """
-    from rfmeig.experiments import exp4_iaea
-
-    exp4_iaea.main(["--run-id", run_id])
+    _run_example("exp4_iaea", run_id)
 
 
 def example_5(run_id: str = "rerun") -> None:
-    """Section 4.2: a Gross-Pitaevskii ground state."""
-    from rfmeig.experiments import exp5_gpe
-
-    exp5_gpe.main(["--run-id", run_id])
+    """Example 5: a Gross-Pitaevskii ground state."""
+    _run_example("exp5_gpe", run_id)
 
 
 def example_6(run_id: str = "rerun") -> None:
-    """Section 4.2: a rotating two-component dipolar condensate."""
-    from rfmeig.experiments import exp6_dipolar
+    """Example 6: a rotating two-component dipolar condensate."""
+    _run_example("exp6_dipolar", run_id)
 
-    exp6_dipolar.main(["--run-id", run_id])
+
+def _run_example(module_name: str, run_id: str) -> None:
+    from rfmeig import PINNED_THREADS
+
+    module = importlib.import_module(f"rfmeig.experiments.{module_name}")
+    module.main(["--run-id", run_id, "--threads", str(PINNED_THREADS)])
+
+
+def main(argv: list[str] | None = None) -> None:
+    commands = {
+        function.__name__: function for function in (
+            figure_1, table_1, table_2, figure_2, example_4_assets, example_4_figures,
+            table_5, table_6, appendix_figures, chinese_tables, all_assets,
+            example_1, example_2, example_3, example_4, example_5, example_6,
+        )
+    }
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("commands", nargs="*", metavar="COMMAND", help=", ".join(commands))
+    args = parser.parse_args(argv)
+    for name in args.commands:
+        if name not in commands:
+            parser.error(f"unknown command {name!r}; choose from {', '.join(commands)}")
+    for name in args.commands or ["all_assets"]:
+        commands[name]()
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        for name in sys.argv[1:]:
-            globals()[name]()
-    else:
-        all_assets()
+    main()

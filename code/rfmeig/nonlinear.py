@@ -4,7 +4,7 @@ Example 5 minimizes the Gross--Pitaevskii energy
 
 .. math::
 
-    E[u]=\int \tfrac12|\nabla u|^2+Vu^2+\tfrac{\beta}{2}u^4
+    E[u]=\int \tfrac12(|\nabla u|^2+Vu^2)+\tfrac{\beta}{4}u^4
 
 over the unit sphere of :math:`L^2`.  The constraint is what makes this a
 Riemannian problem rather than an unconstrained one: the admissible set is a

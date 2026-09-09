@@ -8,14 +8,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from matplotlib.colors import BoundaryNorm, ListedColormap
+from matplotlib.patches import PathPatch
+from matplotlib.path import Path as PlotPath
 from matplotlib.patheffects import withStroke
 
-from paper_assets.paths import EXPERIMENT4_RESULTS, ROOT
-
-#: The random feature run the RFM row of the table is taken from.  The archived
-#: audit holds the five draws of the original run and is left as it stands; this
-#: run repeats that configuration over twenty, which is what the table reports.
-EXPERIMENT4_RFM_RUN = ROOT / "data" / "runs" / "experiment4"
+from paper_assets.formatting import tex_time_seconds
+from paper_assets.paths import REPO_DATA, REPO_EXPERIMENT4_RESULTS
 
 from .geometry import (
     DOMAIN_SIZE,
@@ -25,15 +23,15 @@ from .geometry import (
 )
 from .metrics import mean_power_normalize, relative_flux_max_error
 from .networks import ResidualFluxNet
-from .plotting import plot_baseline_curves
 from .reference import load_reference
 from .rfm import evaluate_random_feature_field
 from .trainer import _evaluate_rayleigh, _TensorCollocation
 
+EXPERIMENT4_RFM_RUN = REPO_DATA / "runs" / "experiment4"
+
 # Type 3 is matplotlib's default and is refused by most typesetters;
-# 42 embeds TrueType outlines instead.  The figures below are drawn at
-# the width they are printed at, so these point sizes are the ones the
-# reader sees, and anything rasterized is written at print resolution.
+# 42 embeds TrueType outlines instead. LaTeX scales the canvas to the
+# manuscript's include width; rasterized fields are saved at 600 dpi.
 plt.rcParams.update(
     {
         "pdf.fonttype": 42,
@@ -49,8 +47,7 @@ plt.rcParams.update(
     }
 )
 
-#: Width of the manuscript's text block in inches; ``\the\textwidth``
-#: is 384 pt and a TeX point is 1/72.27 in.
+#: Base drawing width in inches. The manuscript sets the final include widths.
 TEXT_WIDTH = 384.0 / 72.27
 
 
@@ -129,11 +126,6 @@ def _tex_sci(value: float) -> str:
     return rf"{mantissa:.2f}\times 10^{{{exponent}}}"
 
 
-def _unit_max_normalize(values: np.ndarray) -> np.ndarray:
-    values = np.asarray(values, dtype=float)
-    return values / max(float(np.max(np.abs(values))), 1.0e-30)
-
-
 def _load_baseline_flux(
     checkpoint: Path,
     points: np.ndarray,
@@ -209,17 +201,18 @@ def _recompute_baseline_keff(
 
 
 def generate_experiment4_assets(
-    output_root: str | Path, figure_directory: Path | None = None
+    output_root: str | Path, figure_directory: Path | None = None,
+    *, figures_only: bool = False, data_directory: Path | None = None,
 ) -> None:
     output_root = Path(output_root)
     figure_directory = (
         Path(figure_directory) if figure_directory is not None
         else output_root / "figures"
     )
-    data_directory = output_root / "data"
+    data_directory = Path(data_directory) if data_directory is not None else output_root / "data"
     figure_directory.mkdir(parents=True, exist_ok=True)
     data_directory.mkdir(parents=True, exist_ok=True)
-    result_root = EXPERIMENT4_RESULTS
+    result_root = REPO_EXPERIMENT4_RESULTS
 
     modes, coefficients, summary = _rfm_representative(result_root)
     reference = load_reference(result_root / "reference_subdiv48.npz")
@@ -237,17 +230,28 @@ def generate_experiment4_assets(
     # two are indistinguishable; the comparison they were meant to carry is
     # made quantitatively in the field-error figure.
     fig, axis = plt.subplots(
-        1, 1, figsize=(0.42 * TEXT_WIDTH, 2.30), constrained_layout=True
+        1, 1, figsize=(0.40 * TEXT_WIDTH, 0.40 * TEXT_WIDTH),
+        constrained_layout=True,
     )
-    # A mesh keeps the region boundaries vector; the same map through
-    # imshow was a bitmap, and its edges arrived on the page blurred.
+    # Fill all cells of one material in one vector path. Shared cell edges
+    # then cancel in the fill, avoiding PDF antialiasing seams inside a region.
     materials = cell_labels()
     edges = np.linspace(0.0, 170.0, materials.shape[0] + 1)
-    axis.pcolormesh(
-        edges, edges, materials,
-        cmap=material_colors, norm=material_norm, rasterized=False,
-        edgecolors="face", linewidth=0.0,
-    )
+    codes = [PlotPath.MOVETO, PlotPath.LINETO, PlotPath.LINETO,
+             PlotPath.LINETO, PlotPath.CLOSEPOLY]
+    for material in (1, 2, 3, 4):
+        cells = []
+        for row, column in np.argwhere(materials == material):
+            x0, x1 = edges[column:column + 2]
+            y0, y1 = edges[row:row + 2]
+            cells.append(PlotPath(
+                [(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)], codes,
+            ))
+        axis.add_patch(PathPatch(
+            PlotPath.make_compound_path(*cells),
+            facecolor=material_colors(material_norm(material)), edgecolor="none",
+            label=f"material-{material}",
+        ))
     region_labels = (
         (100.0, 100.0, "1"),
         (45.0, 55.0, "2"),
@@ -264,9 +268,9 @@ def generate_experiment4_assets(
             label,
             ha="center",
             va="center",
-            fontsize=7,
+            fontsize=7.5,
             color="white",
-            path_effects=[withStroke(linewidth=1.5, foreground="#202020")],
+            path_effects=[withStroke(linewidth=1.2, foreground="#202020")],
         )
     axis.set_aspect("equal")
     # same reason as the field panels: a grid drawn over the colours is read
@@ -274,15 +278,23 @@ def generate_experiment4_assets(
     axis.grid(False)
     axis.set_xlim(0.0, 170.0)
     axis.set_ylim(0.0, 170.0)
-    axis.set_xlabel(r"$x$ (cm)")
-    axis.set_ylabel(r"$y$ (cm)")
+    axis.set_xticks([0, 50, 100, 150])
+    axis.set_yticks([0, 50, 100, 150])
+    axis.set_xlabel(r"$x$ (cm)", fontsize=8, labelpad=2)
+    axis.set_ylabel(r"$y$ (cm)", fontsize=8, labelpad=2)
+    axis.tick_params(labelsize=7.5, length=2.5, width=0.7, pad=2)
+    for side in ("top", "right"):
+        axis.spines[side].set_visible(False)
+    for side in ("bottom", "left"):
+        axis.spines[side].set_linewidth(0.7)
     fig.savefig(
-        figure_directory / "experiment4_rfm_overview.pdf", bbox_inches="tight"
+        figure_directory / "experiment4_rfm_overview.pdf",
+        bbox_inches="tight", pad_inches=0.015,
     )
     fig.savefig(
         figure_directory / "experiment4_rfm_overview.png",
         dpi=600,
-        bbox_inches="tight",
+        bbox_inches="tight", pad_inches=0.015,
     )
     plt.close(fig)
 
@@ -383,12 +395,23 @@ def generate_experiment4_assets(
     # One row, in the order of the summary table, so the panels read as a
     # sequence and the RFM panel closes it.  This is the arrangement of
     # Fig. 12 of Yang et al., against whose field errors these are compared.
-    figure, axes = plt.subplots(
-        1, 4, figsize=(TEXT_WIDTH, 1.95), constrained_layout=True
-    )
+    # Specify square map axes in physical units. The colorbar has exactly
+    # their height, independent of titles and coordinate labels.
+    left, right, gap = 0.34, 0.48, 0.14
+    side = (TEXT_WIDTH - left - right - 3 * gap) / 4
+    bottom, top = 0.29, 0.285
+    height = bottom + side + top
+    figure = plt.figure(figsize=(TEXT_WIDTH, height))
+    axes = [
+        figure.add_axes([
+            (left + index * (side + gap)) / TEXT_WIDTH,
+            bottom / height, side / TEXT_WIDTH, side / height,
+        ])
+        for index in range(4)
+    ]
     active_grid = labels_at(points) > 0
     for axis, method, panel in zip(
-        axes.ravel(),
+        axes,
         ("drm", "gipmnn", "pc_gipmnn", "rfm"),
         ("a", "b", "c", "d"),
         strict=True,
@@ -408,37 +431,52 @@ def generate_experiment4_assets(
         axis.set_title(
             rf"({panel}) {method_labels[method]}" "\n"
             rf"$e_\varphi={_tex_sci(field_error_by_method[method])}$",
-            fontsize=7.5,
+            fontsize=7.5, pad=3,
         )
         axis.set_aspect("equal")
         axis.grid(False)
         axis.set_xlim(0.0, DOMAIN_SIZE)
         axis.set_ylim(0.0, DOMAIN_SIZE)
-        axis.set_xlabel(r"$x$ (cm)")
+        axis.set_xticks([0, 100])
+        axis.set_yticks([0, 50, 100, 150])
+        axis.set_xlabel(r"$x$ (cm)", fontsize=8, labelpad=1.5)
+        axis.tick_params(labelsize=7.5, length=2.5, width=0.7, pad=2)
+        for spine in ("top", "right"):
+            axis.spines[spine].set_visible(False)
+        for spine in ("bottom", "left"):
+            axis.spines[spine].set_linewidth(0.7)
         if method == "drm":
-            axis.set_ylabel(r"$y$ (cm)")
+            axis.set_ylabel(r"$y$ (cm)", fontsize=8, labelpad=2)
         else:
-            axis.set_yticklabels([])
-    colorbar = figure.colorbar(plot, ax=axes, fraction=0.035, pad=0.02)
+            axis.tick_params(labelleft=False)
+    color_axis = figure.add_axes([
+        (TEXT_WIDTH - right + 0.10) / TEXT_WIDTH,
+        bottom / height, 0.065 / TEXT_WIDTH, side / height,
+    ])
+    colorbar = figure.colorbar(plot, cax=color_axis)
     colorbar.set_label(
         r"$|\mathcal{N}\phi-\mathcal{N}\phi_{\rm ref}|/"
         r"\|\mathcal{N}\phi_{\rm ref}\|_{\infty}$",
-        fontsize=8,
+        fontsize=7, labelpad=3,
     )
-    colorbar.ax.tick_params(labelsize=7)
+    colorbar.ax.tick_params(labelsize=7, length=2.5, width=0.7, pad=2)
+    colorbar.outline.set_linewidth(0.7)
     colorbar.ax.yaxis.get_offset_text().set_fontsize(7)
     colorbar.formatter.set_powerlimits((-2, 2))
     colorbar.update_ticks()
     figure.savefig(
         figure_directory / "experiment4_flux_error_comparison.pdf",
-        bbox_inches="tight",
+        bbox_inches="tight", pad_inches=0.015,
     )
     figure.savefig(
         figure_directory / "experiment4_flux_error_comparison.png",
         dpi=600,
-        bbox_inches="tight",
+        bbox_inches="tight", pad_inches=0.015,
     )
     plt.close(figure)
+
+    if figures_only:
+        return
 
     with (data_directory / "experiment4_field_error_summary.csv").open(
         "w", newline="", encoding="utf-8"
@@ -447,8 +485,19 @@ def generate_experiment4_assets(
         writer.writeheader()
         writer.writerows(field_rows)
 
-    plot_baseline_curves(result_root, figure_directory / "experiment4_baseline_convergence.pdf")
 
+    build_experiment4_table(output_directory=data_directory)
+
+
+def build_experiment4_table(*, output_directory: Path | None = None) -> None:
+    """Build the comparison table from recorded statistics without redrawing fields."""
+    from paper_assets.paths import DATA
+
+    data_directory = output_directory or DATA
+    data_directory.mkdir(parents=True, exist_ok=True)
+    result_root = REPO_EXPERIMENT4_RESULTS
+    audit = json.loads((result_root / "experiment4_audit.json").read_text(encoding="utf-8"))
+    rfm_statistics, rfm_draws = _rfm_draw_statistics(audit)
     labels = {
         "drm": "DRM",
         "gipmnn": "GIPMNN",
@@ -460,7 +509,7 @@ def generate_experiment4_assets(
         r"\centering",
         r"\small",
         r"\setlength{\tabcolsep}{5pt}",
-        rf"\caption{{Errors and computation times of the neural-network baselines and the RFM for the IAEA quarter-core benchmark. RFM entries are medians over {_spelled(rfm_draws)} independent feature draws, with the observed range in brackets.}}",
+        rf"\caption{{Errors and computation times of the neural-network baselines and the RFM for the IAEA quarter-core benchmark. RFM entries are medians over {_spelled(rfm_draws)} independent feature draws.}}",
         r"\label{tab:experiment4_iea_neutron}",
         r"\begin{tabular}{lcccc}",
         r"\toprule",
@@ -482,31 +531,11 @@ def generate_experiment4_assets(
         row["seconds"] = float(entry["seconds"])
         row["timing_device"] = str(entry["device"])
         row["timing_dtype"] = str(entry["dtype"])
-        if method == "rfm":
-            # A nested tabular rather than \shortstack, which sets its baseline
-            # at the foot of the stack: the median then climbed into the row
-            # above and read as the preceding method's.  The [t] alignment
-            # keeps it on its own row and hangs the range below.
-            keff_error = (
-                r"\begin{tabular}[t]{@{}c@{}}"
-                rf"\({_tex_sci(float(row['keff_error']))}\)\\"
-                rf"\([{_tex_sci(float(row['keff_error_min']))},"
-                rf"{_tex_sci(float(row['keff_error_max']))}]\)"
-                r"\end{tabular}"
-            )
-            flux_error = (
-                r"\begin{tabular}[t]{@{}c@{}}"
-                rf"\({_tex_sci(float(row['flux_error']))}\)\\"
-                rf"\([{_tex_sci(float(row['flux_error_min']))},"
-                rf"{_tex_sci(float(row['flux_error_max']))}]\)"
-                r"\end{tabular}"
-            )
-        else:
-            keff_error = rf"\({_tex_sci(float(row['keff_error']))}\)"
-            flux_error = rf"\({_tex_sci(float(row['flux_error']))}\)"
+        keff_error = rf"\({_tex_sci(float(row['keff_error']))}\)"
+        flux_error = rf"\({_tex_sci(float(row['flux_error']))}\)"
         lines.append(
             f"{labels[method]} & {float(row['keff']):.6f} & "
-            f"{keff_error} & {flux_error} & {float(row['seconds']):.1f}\\\\"
+            f"{keff_error} & {flux_error} & {tex_time_seconds(row['seconds'])}\\\\"
         )
         csv_rows.append(dict(row))
     lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}"])

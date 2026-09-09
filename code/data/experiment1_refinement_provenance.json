@@ -1,0 +1,282 @@
+{
+  "configuration": {
+    "total_draws": 960,
+    "validation_draws": 800,
+    "calibration_draws": 160,
+    "orders_per_subinterval": [
+      128,
+      256,
+      512
+    ],
+    "breakpoints": [
+      0.37,
+      0.63
+    ],
+    "assembly_and_measurement": "identical tensor composite Gauss, all H1 quantities refined too",
+    "reference_value_fixed_from_original_metadata": 149.91769837259983,
+    "recomputed_reference_value": 149.91769837261944,
+    "reference_modes": 112,
+    "reference_quadrature_order": 96,
+    "tail_exponent": 2.42,
+    "frequency_scale": 8.5,
+    "truncation": 1e-12,
+    "workers": 2,
+    "blas_threads_per_worker": 3,
+    "filtering": "none",
+    "implementation": "1D separated Gram products, algebraically the original tensor quadrature"
+  },
+  "source_script_sha256": {
+    "refined_core.py": "c688f4c01c88ce2c6fb21c452fad63694173d253c17f1ff0d449a28021dba791",
+    "run_refinement.py": "b76ec7e9f11fbcd24d8d7e78302f72d8b5c4fe70d5010eb98cad61acbbe571cb",
+    "analyze_refinement.py": "b0ca75c305756ca6e653b2475f927ac505d9fa3868a4dae5063134b02eb64ed2"
+  },
+  "assembly_validation": [
+    {
+      "N": 128,
+      "sample": 0,
+      "energy_relative_difference": 5.381823587079954e-16,
+      "mass_relative_difference": 5.590635191740467e-16
+    },
+    {
+      "N": 216,
+      "sample": 85,
+      "energy_relative_difference": 9.242810347065147e-16,
+      "mass_relative_difference": 5.546190828469966e-16
+    },
+    {
+      "N": 896,
+      "sample": 56,
+      "energy_relative_difference": 2.567589955230855e-16,
+      "mass_relative_difference": 5.551189341284168e-16
+    }
+  ],
+  "reference_validation": [
+    {
+      "modes": 112,
+      "order": 96,
+      "lambda_star": 149.91769837261944,
+      "relative_shift": 0.0
+    },
+    {
+      "modes": 112,
+      "order": 192,
+      "lambda_star": 149.9176983726004,
+      "relative_shift": -1.2701999513786934e-13
+    },
+    {
+      "modes": 112,
+      "order": 384,
+      "lambda_star": 149.9176983726224,
+      "relative_shift": 1.9716536558714048e-14
+    },
+    {
+      "modes": 160,
+      "order": 384,
+      "lambda_star": 149.917698372624,
+      "relative_shift": 3.033313316725238e-14
+    },
+    {
+      "modes": 224,
+      "order": 384,
+      "lambda_star": 149.91769837256834,
+      "relative_shift": -3.4086858396699865e-13
+    }
+  ],
+  "metric_validation": [
+    {
+      "N": 128,
+      "sample": 0,
+      "order": 512,
+      "fast_gap": 0.0005979199945118,
+      "field_evaluated_gap": 0.0005979200056527,
+      "fast_eta": 0.0014960122243583,
+      "field_evaluated_projection_residual": 0.0014960122440083,
+      "gap_relative_difference": 1.8632679399388508e-08,
+      "eta_relative_difference": 1.3134954901516949e-08,
+      "original_rule_gap_relative_difference": 9.305175963092438e-09,
+      "original_rule_eta_relative_difference": 1.8756570296929453e-08
+    },
+    {
+      "N": 128,
+      "sample": 86,
+      "order": 512,
+      "fast_gap": 0.0006641385998372,
+      "field_evaluated_gap": 0.0006641386198973,
+      "fast_eta": 0.0016128967428486,
+      "field_evaluated_projection_residual": 0.0016128970443666,
+      "gap_relative_difference": 3.0204664103195e-08,
+      "eta_relative_difference": 1.8694182468692588e-07,
+      "original_rule_gap_relative_difference": 1.249682266557528e-07,
+      "original_rule_eta_relative_difference": 2.503318619062611e-07
+    },
+    {
+      "N": 128,
+      "sample": 93,
+      "order": 512,
+      "fast_gap": 0.000785883330364,
+      "field_evaluated_gap": 0.0007858841134272,
+      "fast_eta": 0.001398268209832,
+      "field_evaluated_projection_residual": 0.001398268186117,
+      "gap_relative_difference": 9.964105230908515e-07,
+      "eta_relative_difference": 1.6960252535724862e-08,
+      "original_rule_gap_relative_difference": 4.0431830328202523e-07,
+      "original_rule_eta_relative_difference": 9.28290981860869e-08
+    },
+    {
+      "N": 160,
+      "sample": 0,
+      "order": 512,
+      "fast_gap": 0.0006448635430326,
+      "field_evaluated_gap": 0.0006448635339079,
+      "fast_eta": 0.0011455002008494,
+      "field_evaluated_projection_residual": 0.0011455002647598,
+      "gap_relative_difference": 1.4149805105390101e-08,
+      "eta_relative_difference": 5.579255901722036e-08,
+      "original_rule_gap_relative_difference": 5.3340365457899e-09,
+      "original_rule_eta_relative_difference": 2.8638099225375413e-08
+    },
+    {
+      "N": 160,
+      "sample": 16,
+      "order": 512,
+      "fast_gap": 0.0006446841452028,
+      "field_evaluated_gap": 0.0006446841081773,
+      "fast_eta": 0.0011265822605494,
+      "field_evaluated_projection_residual": 0.0011265823959952,
+      "gap_relative_difference": 5.743210684805433e-08,
+      "eta_relative_difference": 1.202271472378058e-07,
+      "original_rule_gap_relative_difference": 2.1881231715426e-08,
+      "original_rule_eta_relative_difference": 1.236989148889478e-07
+    },
+    {
+      "N": 216,
+      "sample": 0,
+      "order": 512,
+      "fast_gap": 0.0005037738965424,
+      "field_evaluated_gap": 0.0005037738678929,
+      "fast_eta": 0.0009125128155945,
+      "field_evaluated_projection_residual": 0.0009125127717259,
+      "gap_relative_difference": 5.6869877917975487e-08,
+      "eta_relative_difference": 4.8074459968461276e-08,
+      "original_rule_gap_relative_difference": 8.211707158700676e-08,
+      "original_rule_eta_relative_difference": 5.28547065004048e-08
+    },
+    {
+      "N": 216,
+      "sample": 85,
+      "order": 512,
+      "fast_gap": 0.000509127607836,
+      "field_evaluated_gap": 0.0005091275295511,
+      "fast_eta": 0.0008122904841458,
+      "field_evaluated_projection_residual": 0.0008122903899295,
+      "gap_relative_difference": 1.537628724346263e-07,
+      "eta_relative_difference": 1.1598853788541422e-07,
+      "original_rule_gap_relative_difference": 3.044907996851976e-07,
+      "original_rule_eta_relative_difference": 2.042127780210734e-07
+    },
+    {
+      "N": 216,
+      "sample": 89,
+      "order": 512,
+      "fast_gap": 0.0006431629502788,
+      "field_evaluated_gap": 0.0006431630065527,
+      "fast_eta": 0.0009396178967234,
+      "field_evaluated_projection_residual": 0.0009396179104269,
+      "gap_relative_difference": 8.749550362008308e-08,
+      "eta_relative_difference": 1.4584123686489649e-08,
+      "original_rule_gap_relative_difference": 1.2869367127521514e-08,
+      "original_rule_eta_relative_difference": 5.242201805977231e-08
+    },
+    {
+      "N": 288,
+      "sample": 0,
+      "order": 512,
+      "fast_gap": 0.0004094279387175,
+      "field_evaluated_gap": 0.0004094279433273,
+      "fast_eta": 0.0007386565596803,
+      "field_evaluated_projection_residual": 0.0007386565125186,
+      "gap_relative_difference": 1.1259113308348391e-08,
+      "eta_relative_difference": 6.384793382885334e-08,
+      "original_rule_gap_relative_difference": 2.0487154750448155e-08,
+      "original_rule_eta_relative_difference": 3.6707879069730616e-08
+    },
+    {
+      "N": 384,
+      "sample": 0,
+      "order": 512,
+      "fast_gap": 0.0003847415129219,
+      "field_evaluated_gap": 0.0003847415085934,
+      "fast_eta": 0.0006726436384783,
+      "field_evaluated_projection_residual": 0.0006726436383927,
+      "gap_relative_difference": 1.1250281817254404e-08,
+      "eta_relative_difference": 1.2734480137055468e-10,
+      "original_rule_gap_relative_difference": 5.986798834456408e-09,
+      "original_rule_eta_relative_difference": 3.8989555140034327e-08
+    },
+    {
+      "N": 512,
+      "sample": 0,
+      "order": 512,
+      "fast_gap": 0.0003766344793466,
+      "field_evaluated_gap": 0.0003766344819995,
+      "fast_eta": 0.0006337145619544,
+      "field_evaluated_projection_residual": 0.0006337145466093,
+      "gap_relative_difference": 7.043890248858986e-09,
+      "eta_relative_difference": 2.4214617200257752e-08,
+      "original_rule_gap_relative_difference": 1.0929563920569764e-08,
+      "original_rule_eta_relative_difference": 3.0072332402042434e-09
+    },
+    {
+      "N": 672,
+      "sample": 0,
+      "order": 512,
+      "fast_gap": 0.0002711439207434,
+      "field_evaluated_gap": 0.0002711439338461,
+      "fast_eta": 0.0005270659982078,
+      "field_evaluated_projection_residual": 0.0005270659967801,
+      "gap_relative_difference": 4.832372824115083e-08,
+      "eta_relative_difference": 2.708788748861934e-09,
+      "original_rule_gap_relative_difference": 2.4080878624488378e-08,
+      "original_rule_eta_relative_difference": 2.527721565392937e-08
+    },
+    {
+      "N": 672,
+      "sample": 38,
+      "order": 512,
+      "fast_gap": 0.0002687311175056,
+      "field_evaluated_gap": 0.0002687311137874,
+      "fast_eta": 0.0004771987326172,
+      "field_evaluated_projection_residual": 0.0004771987345441,
+      "gap_relative_difference": 1.3836199963535025e-08,
+      "eta_relative_difference": 4.037901013553835e-09,
+      "original_rule_gap_relative_difference": 0.0,
+      "original_rule_eta_relative_difference": 4.023600896907453e-09
+    },
+    {
+      "N": 896,
+      "sample": 0,
+      "order": 512,
+      "fast_gap": 0.0002309392451646,
+      "field_evaluated_gap": 0.000230939236992,
+      "fast_eta": 0.0005230067412524,
+      "field_evaluated_projection_residual": 0.000523006761168,
+      "gap_relative_difference": 3.538862514140817e-08,
+      "eta_relative_difference": 3.8079040143301774e-08,
+      "original_rule_gap_relative_difference": 6.426794363356693e-08,
+      "original_rule_eta_relative_difference": 4.2561147051145554e-08
+    },
+    {
+      "N": 896,
+      "sample": 56,
+      "order": 512,
+      "fast_gap": 0.0001654332841565,
+      "field_evaluated_gap": 0.0001654332841565,
+      "fast_eta": 0.0004132618174114,
+      "field_evaluated_projection_residual": 0.0004132618165105,
+      "gap_relative_difference": 0.0,
+      "eta_relative_difference": 2.179946445579617e-09,
+      "original_rule_gap_relative_difference": 8.052067568264931e-09,
+      "original_rule_eta_relative_difference": 2.8307211685785205e-08
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 {
+  "statistic": "arithmetic mean over the draws at each budget",
   "calibration_budgets": [
     128,
     160,
@@ -10,13 +11,13 @@
     896
   ],
   "calibration_draws_per_budget": 20,
-  "calibration_seed_rule": "2032080000+137*N+sample",
-  "validation_seed_rule": "2031080000+137*N+sample",
+  "validation_draws_per_budget": 100,
+  "quadrature_order_per_subinterval": 512,
   "safety_factor": 1.1,
   "gap_rate": -0.5,
   "eigenvalue_rate": -1.0,
-  "gap_constant_raw": 0.008734390676894865,
-  "eigenvalue_constant_raw": 5.989721337908897e-05,
-  "gap_constant": 0.009607829744584353,
-  "eigenvalue_constant": 6.588693471699787e-05
+  "gap_constant": 0.008511253565046489,
+  "eigenvalue_constant": 5.1346312406155665e-05,
+  "max_validation_ratio_gap": 0.903941081351991,
+  "max_validation_ratio_eigenvalue": 0.9070507976692753
 }

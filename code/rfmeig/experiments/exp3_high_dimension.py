@@ -1,32 +1,10 @@
-r"""Example 3 (Section 4.1): the ten-dimensional benchmark of Ji et al.
+r"""Example 3: ten-dimensional RFM assembly and independent final evaluation.
 
-Two methods, one integration rule.  In ten dimensions the rule is not a detail:
-neither method can integrate exactly, both are estimating the same integrals
-from two hundred thousand quasi-random points, and if they were given different
-points the comparison would be partly a comparison of quadratures.  So the
-random feature method assembles on the same scrambled Sobol nodes the neural
-baseline validates on, and the neural baseline's trained states are re-evaluated
-on those same nodes -- with the same scramble -- rather than quoted from their own
-run.
-
-``rfm``
-    ``--trials`` draws at each feature count, on the shared rule;
-``drm``
-    the six stored states of the neural baseline, re-evaluated.  Nothing is
-    retrained: the states are the ones the source-paper reproduction produced,
-    and re-evaluating them changes only which rule the number comes from.
-
-Two densities are available for the rule.  ``uniform`` is the plain Sobol rule.
-``beta22`` sends each coordinate through the inverse Beta(2,2) distribution and
-divides by its density, which is exact for the same integrals and puts more
-points where the boundary factor carries its mass.  The reported table uses
-``beta22`` for both methods; the uniform path is run as a check that the change
-of density reproduces what the stored states were originally validated with, and
-that check is what the ``uniform_reproduces_stored`` column records.
-
-Run with::
-
-    python -m rfmeig.experiments.exp3_high_dimension --method rfm
+RFM matrices use 2**22 scrambled Sobol points with Beta(2,2) importance
+sampling. Fixed feature fields are evaluated by product integrals after the
+sampled eigensolve. The six stored DRM networks are evaluated independently
+by exp3_drm_final, retaining the source reproduction's penalized quotient.
+Neither final evaluator changes the saved coefficients or selects checkpoints.
 """
 
 from __future__ import annotations
@@ -39,6 +17,7 @@ from typing import Any
 import numpy as np
 
 from rfmeig import provenance, quadrature
+from rfmeig.cube_product_integrals import fixed_cube_observables
 from rfmeig.problems.high_dimensional_cube import (
     BOUNDARY_POINTS,
     INTEGRATION_POINTS,
@@ -55,7 +34,7 @@ DEFAULT_POTENTIALS = ("square", "exp")
 DEFAULT_FEATURE_COUNTS = (128, 256, 384, 512)
 DEFAULT_TRIALS = 20
 DEFAULT_BASE_SEED = 20260603
-#: How many eigenvalues are reported.  The second and third are one double level.
+#: How many eigenvalues are reported.  The second and third belong to the same multiple level.
 DEFAULT_COUNT = 3
 #: Larger than the threshold of the other experiments by many orders, because the
 #: pencil here is assembled by quasi-Monte Carlo: the integration error, not the
@@ -89,7 +68,7 @@ def run_rfm_trial(
 
     ``device`` moves the assembly and the solve onto a card.  The neural
     baseline here was trained on one, so a device run is what makes a timing
-    comparison between the two meaningful -- though Table 3 reports errors only.
+    comparison between the two meaningful -- though the example reports errors only.
     """
     reaction = problem.reaction(points)
 
@@ -110,6 +89,7 @@ def run_rfm_trial(
         finished = time.perf_counter()
         eigenvalues = solved["eigenvalues"]
         retained = solved["retained"]
+        coefficients = solved["coefficients"]
     else:
         energy, mass = assemble_cosine_pencil_expanded(
             points,
@@ -125,6 +105,7 @@ def run_rfm_trial(
         finished = time.perf_counter()
         eigenvalues = solution.eigenvalues
         retained = solution.retained
+        coefficients = solution.coefficients
 
     row: dict[str, Any] = {
         "potential": problem.name,
@@ -138,8 +119,16 @@ def run_rfm_trial(
         "eigensolve_s": finished - assembled,
         "method_s": finished - started,
     }
+    evaluation_started = time.perf_counter()
+    final = fixed_cube_observables(omega, phase, coefficients, potential=problem.name,
+                                   scale=problem.scale)
+    row["final_evaluation"] = "product integrals of fixed feature fields"
+    row["evaluation_s"] = time.perf_counter() - evaluation_started
+    row["orthogonality_max"] = final["orthogonality_max"]
     for index, value in enumerate(eigenvalues, start=1):
-        row[f"lambda_{index}"] = float(value)
+        row[f"assembly_lambda_{index}"] = float(value)
+        row[f"lambda_{index}"] = float(final["rayleigh"][index - 1])
+        row[f"mass_{index}"] = float(final["mass"][index - 1])
     return row
 
 
@@ -191,71 +180,6 @@ def run_rfm(args, run, rule_cache) -> list[dict[str, Any]]:
                     f"errors {errors}  {row['method_s']:.1f}s",
                     flush=True,
                 )
-    return rows
-
-
-def run_drm(args, run, rule_cache) -> list[dict[str, Any]]:
-    from rfmeig.baselines import deep_ritz_cube
-
-    rows: list[dict[str, Any]] = []
-    for name in args.potentials:
-        problem = HighDimensionalCube(name)
-        reference = problem.reference_levels(args.count, grid=args.reference_grid)
-        uniform_points, uniform_weights = rule_cache(problem, "uniform")
-        density_points, density_weights = rule_cache(problem, args.density)
-        boundary = deep_ritz_cube.sobol_boundary(
-            args.boundary_points, problem.dimension, problem.boundary_scramble_seed
-        )
-
-        for mode in range(1, args.count + 1):
-            path = args.checkpoints / f"{name}_mode{mode}.pt"
-            model, metadata = deep_ritz_cube.load_checkpoint(path, problem.dimension)
-            started = time.perf_counter()
-            uniform = deep_ritz_cube.evaluate_state(
-                model,
-                name,
-                problem.scale,
-                uniform_points,
-                uniform_weights,
-                boundary_points=boundary,
-                chunk=args.block,
-            )
-            shifted = deep_ritz_cube.evaluate_state(
-                model,
-                name,
-                problem.scale,
-                density_points,
-                density_weights,
-                boundary_points=boundary,
-                chunk=args.block,
-            )
-            exact = reference[mode - 1]
-            row = {
-                "potential": name,
-                "mode": mode,
-                "checkpoint": path.name,
-                "lambda_ref": exact,
-                "lambda_uniform": uniform.penalized_rayleigh,
-                f"lambda_{args.density}": shifted.penalized_rayleigh,
-                "rel_error_uniform": abs(uniform.penalized_rayleigh - exact) / exact,
-                f"rel_error_{args.density}": abs(shifted.penalized_rayleigh - exact)
-                / exact,
-                # The interior quotient omits the boundary penalty.  It is not
-                # the reported number -- the iterate is not zero on the boundary,
-                # so it is not an approximate eigenvalue -- but the gap between
-                # the two says how much of the state sits outside the space.
-                "lambda_interior_uniform": uniform.interior_rayleigh,
-                "boundary_integral": uniform.boundary_integral,
-                "evaluation_seconds": time.perf_counter() - started,
-                **metadata,
-            }
-            rows.append(run.complete(f"drm_{name}_mode{mode}", row))
-            print(
-                f"{name} mode {mode}: {args.density} "
-                f"{row[f'lambda_{args.density}']:.6f} "
-                f"(error {row[f'rel_error_{args.density}']:.3e})",
-                flush=True,
-            )
     return rows
 
 
@@ -329,11 +253,18 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--checkpoints",
         type=Path,
-        default=Path("data/ji2024_drm_validated_checkpoints"),
+        default=Path(__file__).resolve().parents[2] / "data/ji2024_drm_validated_checkpoints",
     )
     args = parser.parse_args(argv)
 
     provenance.require_threads(args.threads)
+    if args.method == "drm":
+        from rfmeig.experiments import exp3_drm_final
+        exp3_drm_final.main(["--checkpoints", str(args.checkpoints),
+                            "--run-id", args.run_id or "final",
+                            "--device", args.device,
+                            "--potentials", *args.potentials])
+        return
 
     cache: dict[tuple[str, str], tuple[np.ndarray, np.ndarray]] = {}
 
@@ -366,6 +297,16 @@ def main(argv: list[str] | None = None) -> None:
         "reference_grid": args.reference_grid,
         "reference_rule": "second-order finite difference, tensor sums by heap",
         "eigenvalues_reported": args.count,
+        "boundary_points": args.boundary_points,
+        "final_evaluation": "product integrals of fixed RFM fields",
+        "block": args.block,
+        "checkpoints": str(args.checkpoints.resolve()),
+        "checkpoint_sha256": {
+            path.name: provenance.hash_file(path)
+            for name in args.potentials
+            for mode in range(1, args.count + 1)
+            for path in [args.checkpoints / f"{name}_mode{mode}.pt"]
+        } if args.method == "drm" else {},
     }
     run = provenance.open_run(
         EXPERIMENT, config=configuration, run_id=args.run_id, resume=args.resume
@@ -377,9 +318,6 @@ def main(argv: list[str] | None = None) -> None:
         provenance.write_csv(
             run.path("rfm_summary.csv"), summarize_rfm(rows, args.count)
         )
-    else:
-        rows = run_drm(args, run, rule_cache)
-        provenance.write_csv(run.path("drm_reevaluation.csv"), rows)
 
     run.seal(rows=len(rows))
     print(f"written to {run.directory}")

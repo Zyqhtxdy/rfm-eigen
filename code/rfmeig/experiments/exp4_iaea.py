@@ -5,9 +5,9 @@ no boundary factor: the reflective condition is satisfied by every cosine, and
 the vacuum condition is natural for the weak form and enters as a boundary term.
 Because the coefficients are constant on each cell, every entry of the pencil has
 a closed form and the assembly is exact -- see :mod:`rfmeig.piecewise_constant`.
-The frequencies are drawn uniformly from a triangle rather than isotropically,
-which keeps a pair and its transpose from both appearing and makes the constant
-mode the only one repeated.
+The two frequency coordinates are drawn uniformly from the triangle
+``alpha >= 0, beta >= 0, alpha + beta <= radius``. A constant mode is added
+explicitly to the sampled space.
 
 Two numbers are reported: the relative error of the multiplication factor, and
 the largest relative pointwise error of the flux after mean-power normalization.
@@ -62,10 +62,9 @@ NEURAL_WIDTH = 20
 def sample_cosine_modes(count: int, seed: int, radius: float) -> np.ndarray:
     """A constant mode, then frequencies uniform on the triangle of the given side.
 
-    Drawing from a triangle rather than a square is what avoids drawing both a
-    frequency pair and its transpose: the two give the same cosine product up to
-    a relabelling of the axes, and having both wastes a feature.  The constant
-    mode is kept because it is the shape the flux is closest to.
+    Folding the upper half of the unit square across ``x + y = 1`` gives the
+    uniform distribution on this triangle. Swapping the frequency coordinates
+    generally gives a different function; the sampler does not identify them.
     """
     if count < 2:
         raise ValueError("at least two features are needed")
@@ -338,6 +337,11 @@ def run_rfm(args, run) -> list[dict[str, Any]]:
 
 
 def run_neural(args, run) -> list[dict[str, Any]]:
+    call_id = f"neural_{args.neural_method}_{args.neural_seed}"
+    recorded = run.completed(call_id)
+    if recorded is not None:
+        return [recorded]
+
     import torch
 
     from rfmeig.baselines import neural_reactor
@@ -403,7 +407,7 @@ def run_neural(args, run) -> list[dict[str, Any]]:
         f"flux={row['flux_error']:.3e} in {training_seconds:.0f}s",
         flush=True,
     )
-    return [run.complete(f"neural_{args.neural_method}_{args.neural_seed}", row)]
+    return [run.complete(call_id, row)]
 
 
 def summarize_rfm(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -457,8 +461,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--reference",
         type=Path,
-        default=None,
-        help="the stored finite volume reference; required by --method rfm and neural",
+        default=Path(__file__).resolve().parents[2] / "artifacts/experiment4/reference_subdiv48.npz",
+        help="the stored finite volume reference (defaults to the recorded reference)",
     )
 
     parser.add_argument(
@@ -495,6 +499,13 @@ def main(argv: list[str] | None = None) -> None:
         "neural_epochs": args.epochs or NEURAL_EPOCHS[args.neural_method],
         "device": args.device,
         "dtype": args.dtype,
+        "reference": str(args.reference.resolve()) if args.method != "reference" else None,
+        "reference_sha256": provenance.hash_file(args.reference) if args.method != "reference" else None,
+        "direct_assembly": args.direct_assembly,
+        "matrix_free": args.matrix_free,
+        "neural_seed": args.neural_seed,
+        "learning_rate": args.learning_rate,
+        "log_every": args.log_every,
     }
     run = provenance.open_run(
         EXPERIMENT, config=configuration, run_id=args.run_id, resume=args.resume

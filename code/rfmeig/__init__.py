@@ -29,10 +29,7 @@ count actually in force is the one they were asked for, and stop if it is not.
 
 import os
 
-#: The thread count every experiment runs at unless told otherwise.  One thread
-#: is the default because it is the setting the recorded comparisons were made
-#: at: a baseline whose cost is not dense linear algebra gains nothing from more,
-#: so a multi-threaded run flatters whichever side is dense.
+#: Default CPU thread budget. Each recorded run carries its own thread settings.
 DEFAULT_THREADS = 1
 
 #: The variables the threading libraries read at load time.
@@ -48,12 +45,14 @@ THREAD_VARIABLES = (
 def _pin_threads() -> int:
     """Fix the thread count before NumPy is imported anywhere below.
 
-    An explicit ``OMP_NUM_THREADS`` in the environment wins, so that a launcher
-    or a scheduler can still decide; otherwise ``RFMEIG_THREADS`` decides, and
-    failing that the default above.
+    ``RFMEIG_THREADS`` takes precedence over ``OMP_NUM_THREADS``. Both must
+    be set before numerical libraries are loaded; require_threads also checks
+    their loaded thread pools rather than trusting environment variables alone.
     """
     requested = os.environ.get("RFMEIG_THREADS") or os.environ.get("OMP_NUM_THREADS")
     count = int(requested) if requested else DEFAULT_THREADS
+    if count < 1:
+        raise ValueError("RFMEIG_THREADS must be a positive integer")
     for name in THREAD_VARIABLES:
         os.environ[name] = str(count)
     return count

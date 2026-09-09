@@ -81,18 +81,21 @@ def solve_reference(subdiv: int = 16, tolerance: float = 1.0e-10) -> ReferenceSo
 def save_reference(solution: ReferenceSolution, path: str | Path) -> None:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(
-        target,
-        keff=np.asarray(solution.keff),
-        subdiv=np.asarray(solution.subdiv),
-        geometry_sha256=np.asarray(geometry_sha256()),
-        labels=solution.labels,
-        flux=solution.flux,
-    )
+    with target.open("xb") as handle:
+        np.savez_compressed(
+            handle,
+            keff=np.asarray(solution.keff),
+            subdiv=np.asarray(solution.subdiv),
+            geometry_sha256=np.asarray(geometry_sha256()),
+            labels=solution.labels,
+            flux=solution.flux,
+        )
 
 
 def load_reference(path: str | Path) -> ReferenceSolution:
     with np.load(Path(path)) as data:
+        if "geometry_sha256" in data and str(data["geometry_sha256"]) != geometry_sha256():
+            raise ValueError("the stored reference uses a different reactor geometry")
         return ReferenceSolution(
             keff=float(data["keff"]),
             subdiv=int(data["subdiv"]),

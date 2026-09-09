@@ -1,0 +1,27 @@
+{
+  "optimizer_order": 56,
+  "strong_residual_order": 84,
+  "final_observable_order": 112,
+  "draws": 100,
+  "successes": 95,
+  "timing_repeats": 5,
+  "timings_preserved": true,
+  "source_optimizer_records": "experiment5_optimizer_records.csv",
+  "module_checks": [
+    {
+      "N": 128,
+      "seed": 2086155103,
+      "max_difference": 0.0
+    },
+    {
+      "N": 384,
+      "seed": 2086155103,
+      "max_difference": 0.0
+    },
+    {
+      "N": 768,
+      "seed": 2086155893,
+      "max_difference": 0.0
+    }
+  ]
+}

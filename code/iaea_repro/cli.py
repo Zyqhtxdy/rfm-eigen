@@ -15,8 +15,12 @@ from .trainer import RESULTS, train_baseline
 
 
 def command_reference(args: argparse.Namespace) -> None:
+    from rfmeig.provenance import DATA_ROOT
+
+    output = args.output or DATA_ROOT / "experiment4_reference" / f"reference_subdiv{args.subdiv}.npz"
+    if output.exists():
+        raise FileExistsError(f"reference already exists: {output}; choose a new --output")
     solution = solve_reference(args.subdiv)
-    output = RESULTS / f"reference_subdiv{args.subdiv}.npz"
     save_reference(solution, output)
     print(json.dumps({"path": str(output), "subdiv": args.subdiv, "keff": solution.keff}, indent=2))
 
@@ -99,6 +103,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(required=True)
     reference = subparsers.add_parser("reference")
     reference.add_argument("--subdiv", type=int, default=16)
+    reference.add_argument("--output", type=Path, help="new output file; recorded references are preserved")
     reference.set_defaults(function=command_reference)
     baseline = subparsers.add_parser("baseline")
     baseline.add_argument("--config", required=True)

@@ -1,30 +1,9 @@
-r"""Deep Ritz on the ten-dimensional cube: the baseline of Example 3.
+r"""Stored Deep Ritz networks for the ten-dimensional benchmark of Ji et al.
 
-This is the method of Ji et al. (2024), and it differs from the Deep Ritz of
-Example 2 in both of the ways that matter.  The network is a residual stack
-with a squared rectified activation rather than a hyperbolic-tangent one, and the
-boundary condition is imposed by a penalty rather than by multiplication:
-
-.. math::
-
-    \mathcal{L}[u]=\tfrac12\Big(\int_\Omega|\nabla u|^2+\gamma V u^2
-        +\varepsilon_1\int_{\partial\Omega}u^2\Big)
-        +\tfrac{\varepsilon_2}{4}\Big((\|u\|^2-1)^2
-        +2\sum_{k<m}\langle u,u_k\rangle^2\Big).
-
-The penalty is why the reported quantity has to be defined with care.  The
-iterate is not in :math:`H_0^1(\Omega)`, so the quotient is not an upper bound
-for the eigenvalue and the boundary term is not part of it; what is reported is
-the interior Rayleigh quotient of the trained state.  Higher modes are found by
-adding the orthogonality penalty against the modes already accepted, which is
-the deflation the last sum performs.
-
-The three modes of each potential were trained on a graphics card in single
-precision, and their states are stored in the repository.  What this module
-supplies is the network, the functional, and the evaluation of a stored state on
-an arbitrary rule -- in particular on the rule the random feature method
-assembles with, which is what makes the two columns of Table 3 comparable.  The
-trajectories themselves are not retrained here.
+The reported estimator is (domain_energy + eps1 * boundary_mean) / mass,
+preserving the penalty and face-average convention of the stored reproduction.
+An independent quadrature evaluates fixed networks in double precision;
+the original training trajectories and checkpoint selection are unchanged.
 """
 
 from __future__ import annotations
@@ -48,11 +27,9 @@ NORMALIZATION_PENALTY = {"square": 1000.0, "exp": 500.0}
 class SquaredReluResNet(nn.Module):
     r"""The residual network of Ji et al., with activation :math:`\max(0,t)^2`.
 
-    A squared rectifier is twice differentiable where a plain one is not, which
-    the energy needs: the loss contains :math:`|\nabla u|^2` and is itself
-    differentiated, so the activation has to survive two derivatives.  The
-    residual connections are what let the depth be increased without the early
-    layers stopping to train.
+    The activation is continuously differentiable and piecewise quadratic.
+    Spatial derivatives needed by the energy are obtained by automatic
+    differentiation, with the framework convention at the kink.
     """
 
     def __init__(
@@ -161,23 +138,11 @@ def evaluate_state(
     boundary_penalty: float = BOUNDARY_PENALTY,
     chunk: int = 4096,
 ) -> EnergyTerms:
-    r"""The energy, the mass and the boundary term of a fixed state on a rule.
+    r"""Evaluate a fixed state on the supplied interior and boundary rules.
 
-    ``weights`` makes the interior estimate a quadrature; without them the points
-    carry equal weight, which is the Monte Carlo estimate the trajectory itself
-    was validated with.  Supplying the weights of the rule the random feature
-    method assembles with is what puts both methods of Table 3 on one integration
-    rule, and it is the whole reason this function takes a rule at all rather
-    than sampling its own.
-
-    Which quotient to report is a real choice, not a detail.  The iterate is not
-    zero on the boundary, so the interior quotient alone is not the quantity the
-    method minimizes and is systematically *below* the eigenvalue -- by about
-    three percent for the stored states.  What the method minimizes, and what the
-    source reports, is the penalized quotient, in which the boundary term is
-    charged at :math:`\varepsilon_1`.  Table 3 reports the penalized one, so that
-    the baseline is quoted the way its own authors quote it; both are returned
-    here and the difference is recorded with every run.
+    Weighted interior integration and equal-face boundary averaging preserve
+    the stored reproduction's functional. Both interior and penalized quotients
+    are returned; the reported baseline value is the penalized quotient.
     """
     device = next(model.parameters()).device
     dtype = next(model.parameters()).dtype

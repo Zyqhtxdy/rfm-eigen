@@ -11,8 +11,8 @@ The ground state of
     \\|u\\|_{L^2(\\Omega)} = 1
 
 on a box is computed in the sine basis, which is the exact eigenbasis of the
-Dirichlet Laplacian there, so the only error left is the truncation of the
-series -- which is what refining ``modes`` exposes.
+Dirichlet Laplacian there. Refining ``modes`` checks the spatial discretisation;
+the linear-solve tolerance and stationarity residual control the iteration.
 
 The iteration is normalised gradient flow taken implicitly in the whole
 operator, the density frozen at the current state:
@@ -128,9 +128,11 @@ def solve(
 
         operator = LinearOperator((size, size), matvec=apply, dtype=float)
         smoother = LinearOperator((size, size), matvec=precondition, dtype=float)
-        solution, _ = cg(operator, state.ravel(), M=smoother,
+        solution, info = cg(operator, state.ravel(), M=smoother,
                          rtol=linear_tolerance, atol=0.0, maxiter=500,
                          x0=state.ravel())
+        if info != 0:
+            raise RuntimeError(f"spectral reference linear solve did not converge (CG info={info})")
 
         updated = normalise(solution.reshape(shape))
         change = float(np.max(np.abs(updated - state)))

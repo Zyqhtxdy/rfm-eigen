@@ -1,0 +1,12 @@
+{
+  "records": 1049,
+  "candidate_mass_interval": [
+    0.1,
+    1.1
+  ],
+  "candidate_orthogonality_ceiling": 0.05,
+  "final_acceptance_orthogonality_ceiling": 0.01,
+  "admissibility_mismatches": 0,
+  "admissible_above_final_threshold": 15,
+  "source_sha256": "49156293d5bc767bf6634cc67f2d69c24237b51cc625ba8dcb2d8bab601b08e8"
+}

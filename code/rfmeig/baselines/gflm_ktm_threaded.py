@@ -1,27 +1,9 @@
-"""A GFLM--KTM baseline that uses the fast transform, same discrete scheme.
+"""GFLM--KTM with SciPy's configurable FFT worker budget.
 
-The published baseline spends nearly all of its time in ``numpy.fft``, which is
-pocketfft without threading.  ``scipy.fft`` is the same pocketfft with a
-threaded driver, and on the transform sizes this experiment uses it is 1.9x
-faster at one worker and 2.2x faster at six:
-
-    200 paired 192x192 transforms, six-core budget
-      numpy.fft              663 ms
-      scipy.fft workers=1    492 ms
-      scipy.fft workers=6    296 ms
-      max relative difference 3.2e-16
-
-Leaving that on the table would understate the baseline for the same reason the
-Section 4.2 finite element baseline was understated: an implementation choice,
-not a property of the method.  Since Section 4.6 claims the RFM is both more
-accurate and faster than GFLM--KTM, the claim has to be made against the
-baseline at its best.
-
-Only the transform calls change.  Everything else -- grid, kernel truncation,
-time step, stabilization, stopping rule, initial data -- is inherited from the
-published class, so the iterates are the same sequence to round-off.
-``verify.py`` check 7 confirms the energy, both chemical potentials and the
-iteration count against the published routine.
+The grid, truncated kernel, time step, stabilization, stopping rule and initial
+states are inherited from the NumPy-transform implementation. The reference
+backend tests compare derivatives, convolution, energy and chemical potentials
+between the two implementations to floating-point accuracy.
 """
 from __future__ import annotations
 

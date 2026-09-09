@@ -27,7 +27,7 @@
     "stop_patience_epochs": 20000
   },
   "selection": "best_loss",
-  "selection_rule": "minimum fixed-Sobol validation loss among admissible noncollapsed states",
+  "selection_rule": "minimum fixed-Sobol validation loss under candidate_admissibility; acceptance is a separate post-selection check",
   "output_amplitude_step": "exact one-dimensional minimization of the reported Ji loss",
   "acceptance": {
     "relative_eigenvalue_error": 0.03,
@@ -41,5 +41,16 @@
   },
   "seed": 202406,
   "torch": "2.11.0+cu126",
-  "device": "cuda"
+  "device": "cuda",
+  "candidate_admissibility": {
+    "mass_interval": [
+      0.1,
+      1.1
+    ],
+    "orthogonality_penalty_ceiling": 0.05,
+    "definition": "sum of squared inner products with preceding L2-normalized states; current state is not normalized",
+    "loss_relative_improvement": 1e-05,
+    "checked_progress_rows": 1049,
+    "admissibility_mismatches": 0
+  }
 }

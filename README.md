@@ -2,11 +2,12 @@
 
 This repository contains the code and the recorded output for the article
 
-> **High-Probability Convergence Analysis of the Random Feature Method for
-> Isolated Multiple Elliptic Eigenvalues**
+> **High-probability convergence of the random feature method for
+> multiple eigenvalues of elliptic operators**
 
-Every table and figure the article prints is written by a script here, from
-recorded output that is committed alongside it. Nothing is transcribed by hand.
+The article's five numerical result tables and six figures are generated from
+the recorded output included here. The material-parameter table is written
+directly in the manuscript.
 
 ## Reproducing
 

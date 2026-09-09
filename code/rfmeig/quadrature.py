@@ -86,10 +86,9 @@ def sobol_cube(
     recorded with every run and the uniform path is kept available as a check
     that the change of density has not changed what is being computed.
 
-    The points come from the same generator the neural baseline of Example 3
-    validates on.  That matters more than which generator it is: a comparison in
-    which the two methods integrate on different nodes is a comparison of
-    quadratures as much as of methods.
+    The generator and endpoint clipping preserve the recorded assembly rules.
+    Final evaluation in Example 3 is independent of the assembly and training
+    points; its rule and seeds are recorded separately.
     """
     import torch
 

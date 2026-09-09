@@ -1,0 +1,6 @@
+# Preserve the exact bytes covered by scientific-data and run manifests.
+# These text files remain diffable; their recorded LF/CRLF endings are valid.
+code/data/** -text whitespace=trailing-space,space-before-tab,cr-at-eol
+code/artifacts/** -text whitespace=trailing-space,space-before-tab,cr-at-eol
+code/configs/** -text whitespace=trailing-space,space-before-tab,cr-at-eol
+figures/*.pdf binary

@@ -41,20 +41,18 @@ from typing import Any
 
 import numpy as np
 
-from rfmeig import features, metrics, provenance, quadrature
+from rfmeig import features, metrics, provenance
 from rfmeig.problems.separable import (
     DoubleKinkPotential,
     leading_pairs,
     locate_pair,
-    product_fields,
-    separable_reaction,
     solve_one_dimensional,
 )
 from rfmeig.rayleigh_ritz import (
-    assemble_pencil,
     pencil_residuals,
     solve_energy_whitened,
 )
+from rfmeig.separable_assembly import SeparableSquareQuadrature
 
 EXPERIMENT = "experiment1"
 
@@ -73,14 +71,15 @@ DEFAULT_DRAWS = 100
 DEFAULT_BASE_SEED = 2031080000
 DEFAULT_TAIL_EXPONENT = 2.42
 DEFAULT_FREQUENCY_SCALE = 8.5
-DEFAULT_ASSEMBLY_ORDER = 32
-DEFAULT_EVALUATION_ORDER = 132
-DEFAULT_SUBSPACE_ORDER = 84
+DEFAULT_ASSEMBLY_ORDER = 512
+DEFAULT_EVALUATION_ORDER = 512
+DEFAULT_SUBSPACE_ORDER = 512
 DEFAULT_REFERENCE_MODES = 112
 DEFAULT_REFERENCE_ORDER = 96
 DEFAULT_TRUNCATION = 1.0e-12
+DEFAULT_REFERENCE_VALUE = 149.91769837259983
 
-#: The quantiles the rates are fitted through, and the level of the fit.
+#: Means are the manuscript statistic; quantiles are retained as diagnostics.
 RATE_FIELDS = ("h1_gap", "eta_f_h1", "cluster_relative_error")
 RATE_LEVEL = 0.9
 
@@ -91,121 +90,70 @@ def draw_seed(base: int, count: int, draw: int) -> int:
 
 
 def run_draw(
-    *,
-    feature_count: int,
-    seed: int,
-    potential: DoubleKinkPotential,
-    tail_exponent: float,
-    frequency_scale: float,
-    truncation: float,
-    assembly: tuple[np.ndarray, np.ndarray],
-    evaluation: tuple[np.ndarray, np.ndarray],
-    subspace: tuple[np.ndarray, np.ndarray],
-    target_fields: tuple[np.ndarray, np.ndarray],
-    subspace_fields: tuple[np.ndarray, np.ndarray],
-    first: int,
-    last: int,
-    exact: float,
+    *, feature_count: int, seed: int, potential: DoubleKinkPotential,
+    tail_exponent: float, frequency_scale: float, truncation: float,
+    assembly: SeparableSquareQuadrature, evaluation: SeparableSquareQuadrature,
+    subspace: SeparableSquareQuadrature, first: int, last: int, exact: float,
 ) -> dict[str, Any]:
-    """One realization: draw the features, assemble, solve and measure.
+    """Draw, assemble and solve, then measure on the retained space.
 
-    Each stage is timed separately.  The clock on the method itself stops once
-    the eigenpairs are available; everything after that is measurement against a
-    reference the method never sees, and is timed apart so that the two are never
-    confused.
+    All three rules are composite. When their orders coincide, their matrices
+    are shared; the tensor rule itself is unchanged by this factorization.
     """
-    assembly_points, assembly_weights = assembly
-    evaluation_points, evaluation_weights = evaluation
-    subspace_points, subspace_weights = subspace
-
     started = time.perf_counter()
     omega, phase = features.sample_inverse_cdf_features(
         feature_count, tail_exponent, seed, frequency_scale
     )
     sample_seconds = time.perf_counter() - started
-
     started = time.perf_counter()
-    values, gradients = features.evaluate(
-        assembly_points, omega, phase, features.square_factor
-    )
-    energy, mass = assemble_pencil(
-        values,
-        gradients,
-        assembly_weights,
-        reaction=separable_reaction(assembly_points, potential),
-    )
+    forms = assembly.assemble(omega, phase)
     assemble_seconds = time.perf_counter() - started
-
     started = time.perf_counter()
-    solution = solve_energy_whitened(energy, mass, RITZ_COUNT, tolerance=truncation)
-    residuals = pencil_residuals(
-        energy, mass, solution.eigenvalues, solution.coefficients
-    )
+    solution = solve_energy_whitened(forms.energy, forms.mass, RITZ_COUNT, tolerance=truncation)
     solve_seconds = time.perf_counter() - started
-
-    # ---- measurement against the reference, outside the method's clock -----
+    residuals = pencil_residuals(forms.energy, forms.mass, solution.eigenvalues, solution.coefficients)
     started = time.perf_counter()
-    phi, grad_phi = features.evaluate(
-        evaluation_points, omega, phase, features.square_factor
-    )
-    target = solution.coefficients[:, first - 1 : last]
-    gap = metrics.eigenspace_gap(
-        evaluation_weights,
-        *target_fields,
-        phi @ target,
-        np.einsum("qnd,nj->qjd", grad_phi, target, optimize=True),
+    target_forms = forms if evaluation is assembly else evaluation.assemble(omega, phase)
+    target = solution.coefficients[:, first - 1:last]
+    gap = metrics.eigenspace_gap_from_grams(
+        target_forms.reference_gram[-2:, -2:], target.T @ target_forms.h1 @ target,
+        target_forms.cross[-2:] @ target,
     )
     target_seconds = time.perf_counter() - started
-
     started = time.perf_counter()
-    phi, grad_phi = features.evaluate(
-        subspace_points, omega, phase, features.square_factor
-    )
+    subspace_forms = (forms if subspace is assembly else target_forms if subspace is evaluation
+                      else subspace.assemble(omega, phase))
     basis = solution.basis
-    approximation = metrics.best_approximation_error(
-        subspace_weights,
-        *subspace_fields,
-        phi @ basis,
-        np.einsum("qnd,nr->qrd", grad_phi, basis, optimize=True),
-        relative_tolerance=1.0e-13,
+    approximation = metrics.best_approximation_from_grams(
+        subspace_forms.reference_gram[:last, :last], basis.T @ subspace_forms.h1 @ basis,
+        subspace_forms.cross[:last] @ basis, relative_tolerance=1.0e-13,
     )
-    subspace_seconds = time.perf_counter() - started
-
-    row: dict[str, Any] = {
-        "N": feature_count,
-        "seed": seed,
-        "retained": solution.retained,
-        "h1_gap": gap,
-        "eta_f_h1": approximation,
+    row = {
+        "N": feature_count, "seed": seed, "retained": solution.retained,
+        "h1_gap": gap, "eta_f_h1": approximation,
         **metrics.cluster_errors(solution.eigenvalues, first, last, exact),
         "pencil_residual_max": float(np.max(residuals)),
-        "sample_s": sample_seconds,
-        "assemble_s": assemble_seconds,
-        "eigensolve_s": solve_seconds,
-        "target_evaluation_s": target_seconds,
-        "subspace_evaluation_s": subspace_seconds,
+        "sample_s": sample_seconds, "assemble_s": assemble_seconds,
+        "eigensolve_s": solve_seconds, "target_evaluation_s": target_seconds,
+        "subspace_evaluation_s": time.perf_counter() - started,
+        "method_s": sample_seconds + assemble_seconds + solve_seconds,
     }
-    row["index_success"] = int(
-        row["lower_external_gap_relative"] > 0.0
-        and row["upper_external_gap_relative"] > 0.0
-    )
-    row["method_s"] = sample_seconds + assemble_seconds + solve_seconds
-    for index, value in enumerate(solution.eigenvalues, start=1):
-        row[f"lambda_{index}"] = float(value)
-    row.update(
-        {f"truncation_{key}": value for key, value in solution.diagnostics.items()}
-    )
+    row["index_success"] = int(row["lower_external_gap_relative"] > 0.0
+                               and row["upper_external_gap_relative"] > 0.0)
+    row.update({f"lambda_{i}": float(v) for i, v in enumerate(solution.eigenvalues, start=1)})
+    row.update({f"truncation_{key}": value for key, value in solution.diagnostics.items()})
     return row
 
 
 def summarize(rows: list[dict[str, Any]], counts: list[int]) -> list[dict[str, Any]]:
-    """Median and upper quantile of every reported quantity, at each feature count."""
+    """Arithmetic mean, median and upper quantile at each feature count."""
     summary: list[dict[str, Any]] = []
     for count in counts:
         block = [row for row in rows if int(row["N"]) == count]
         entry: dict[str, Any] = {
             "N": count,
             "draws": len(block),
+            "samples": len(block),
             "retained_median": float(np.median([row["retained"] for row in block])),
             "index_success_count": int(sum(row["index_success"] for row in block)),
         }
@@ -219,6 +167,7 @@ def summarize(rows: list[dict[str, Any]], counts: list[int]) -> list[dict[str, A
             "method_s",
         ):
             sample = np.asarray([float(row[field]) for row in block])
+            entry[f"{field}_mean"] = float(np.mean(sample))
             entry[f"{field}_median"] = float(np.median(sample))
             entry[f"{field}_q90"] = float(np.quantile(sample, RATE_LEVEL))
         summary.append(entry)
@@ -226,22 +175,18 @@ def summarize(rows: list[dict[str, Any]], counts: list[int]) -> list[dict[str, A
 
 
 def fit_rates(rows: list[dict[str, Any]], counts: list[int]) -> dict[str, Any]:
-    """The fitted rate of each quantity, with a bootstrap interval over the draws."""
-    rates: dict[str, Any] = {}
+    """Fit all budgets, with stratified bootstrap intervals for the means."""
+    if len(counts) < 2:
+        return {}
+    rates = {}
     for field in RATE_FIELDS:
-        quantiles = [
-            float(
-                np.quantile(
-                    [float(row[field]) for row in rows if int(row["N"]) == count],
-                    RATE_LEVEL,
-                )
-            )
-            for count in counts
-        ]
-        rates[f"{field}_q90_slope"] = metrics.regression_slope(counts, quantiles)
-        rates[f"{field}_q90_slope_bootstrap_95"] = list(
-            metrics.bootstrap_slope_interval(rows, counts, field, level=RATE_LEVEL)
-        )
+        for name, reducer in (("mean", np.mean), ("q90", lambda x: np.quantile(x, RATE_LEVEL))):
+            values = [float(reducer([row[field] for row in rows if int(row["N"]) == n]))
+                      for n in counts]
+            rates[f"{field}_{name}_slope"] = metrics.regression_slope(counts, values)
+        rates[f"{field}_mean_slope_bootstrap_95"] = list(metrics.bootstrap_slope_interval(
+            rows, counts, field, statistic="mean"
+        ))
     return rates
 
 
@@ -267,10 +212,13 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--subspace-order", type=int, default=DEFAULT_SUBSPACE_ORDER)
     parser.add_argument("--reference-modes", type=int, default=DEFAULT_REFERENCE_MODES)
     parser.add_argument("--reference-order", type=int, default=DEFAULT_REFERENCE_ORDER)
+    parser.add_argument("--reference-value", type=float, default=DEFAULT_REFERENCE_VALUE)
     parser.add_argument("--truncation", type=float, default=DEFAULT_TRUNCATION)
     parser.add_argument("--threads", type=int, default=1)
     args = parser.parse_args(argv)
 
+    if args.draws < 1 or len(set(args.feature_counts)) != len(args.feature_counts):
+        parser.error("draws must be positive and feature counts must be distinct")
     provenance.require_threads(args.threads)
     potential = DoubleKinkPotential()
 
@@ -284,12 +232,15 @@ def main(argv: list[str] | None = None) -> None:
         "tail_exponent": args.tail_exponent,
         "frequency_scale": args.frequency_scale,
         "assembly_composite_order_per_cell": args.assembly_order,
-        "evaluation_tensor_order": args.evaluation_order,
-        "subspace_tensor_order": args.subspace_order,
+        "evaluation_composite_order_per_interval": args.evaluation_order,
+        "subspace_composite_order_per_interval": args.subspace_order,
         "reference_modes": args.reference_modes,
         "reference_composite_order_per_cell": args.reference_order,
         "truncation_tolerance": args.truncation,
         "ritz_count": RITZ_COUNT,
+        "reference_value": args.reference_value,
+        "statistic": "arithmetic mean",
+        "quadrature": "separated evaluation of composite tensor Gauss",
     }
     run = provenance.open_run(
         EXPERIMENT, config=configuration, run_id=args.run_id, resume=args.resume
@@ -304,18 +255,15 @@ def main(argv: list[str] | None = None) -> None:
             "the target eigenvalue is simple; the experiment needs a double one"
         )
 
-    assembly = quadrature.tensor_square(args.assembly_order, potential.breakpoints)
-    evaluation = quadrature.tensor_square(args.evaluation_order)
-    subspace = quadrature.tensor_square(args.subspace_order)
-
-    target_fields = product_fields(
-        evaluation[0], reference_vectors, [TARGET_PAIR, tuple(reversed(TARGET_PAIR))]
-    )
-    subspace_fields = product_fields(
-        subspace[0],
-        reference_vectors,
-        leading_pairs(reference_values, last, limit=PAIR_LIMIT),
-    )
+    pairs = leading_pairs(reference_values, last, limit=PAIR_LIMIT) + [
+        TARGET_PAIR, tuple(reversed(TARGET_PAIR))
+    ]
+    rules = {order: SeparableSquareQuadrature(potential, reference_vectors, pairs, order)
+             for order in {args.assembly_order, args.evaluation_order, args.subspace_order}}
+    assembly, evaluation, subspace = (rules[order] for order in (
+        args.assembly_order, args.evaluation_order, args.subspace_order
+    ))
+    exact = args.reference_value
 
     rows: list[dict[str, Any]] = []
     for count in args.feature_counts:
@@ -335,13 +283,12 @@ def main(argv: list[str] | None = None) -> None:
                 assembly=assembly,
                 evaluation=evaluation,
                 subspace=subspace,
-                target_fields=target_fields,
-                subspace_fields=subspace_fields,
                 first=first,
                 last=last,
                 exact=exact,
             )
             row["draw"] = draw
+            row["sample"] = draw
             rows.append(run.complete(call_id, row))
         print(f"N={count}: {args.draws} draws complete", flush=True)
 

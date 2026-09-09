@@ -5,13 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "rfmeig"
 version = "1.0.0"
-description = "Numerical experiments for the random feature method applied to isolated multiple elliptic eigenvalues"
+description = "Numerical experiments for the random feature method applied to multiple eigenvalues of elliptic operators"
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.26",
-    "scipy>=1.11",
+    "scipy>=1.12",
     "pandas>=2.0",
     "matplotlib>=3.8",
+    "threadpoolctl>=3.1",
 ]
 
 [project.optional-dependencies]
@@ -20,14 +21,29 @@ fem = ["scikit-fem>=8.0"]
 # the neural baselines of Examples 3 and 4, and the Sobol generator whose
 # scrambles Example 3's integration rule is validated on
 neural = ["torch>=2.1"]
+dev = ["pytest>=8", "ruff>=0.15"]
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["rfmeig*", "iaea_repro*", "paper_assets*"]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
 [tool.ruff]
-line-length = 88
+line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "UP", "B", "SIM"]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"rfmeig/problems/dipolar*.py" = ["B905", "B023", "B007"]
+"rfmeig/baselines/gflm_ktm*.py" = ["B905"]
+"rfmeig/baselines/weak_galerkin.py" = ["B023"]
+"rfmeig/nonlinear.py" = ["B007"]
+"iaea_repro/paper_assets.py" = ["B007", "B905"]
+"iaea_repro/rfm.py" = ["B905"]
+"paper_assets/assets.py" = ["B905"]

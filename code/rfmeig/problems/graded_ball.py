@@ -186,7 +186,7 @@ class GradedBall:
         """The ordered index range of the level occupying position ``index``.
 
         These are the indices :math:`k,\\ldots,k+m-1` of Section 2.2, at which
-        Lemma 3.3 places the target cluster once the approximation of
+        Lemma 3.3 places the target eigenvalue cluster once the approximation of
         :math:`F_\\star` is below its threshold.
         """
         start = 0

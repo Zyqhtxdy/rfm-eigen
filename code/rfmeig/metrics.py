@@ -16,9 +16,10 @@ the whole trial space in place of the Ritz subspace: it measures how well the
 random features could approximate the target, independently of how well the
 Rayleigh--Ritz method actually does.
 
-*The rate.*  Fitted by least squares to the logarithm of the upper quantile
-across draws, with a bootstrap interval over the draws, so that a rate is
-reported with the uncertainty its finite sample deserves.
+*The rate.* Fitted by least squares in log--log coordinates to the chosen
+statistic across draws, with a stratified bootstrap interval. Example 1 uses
+the arithmetic mean over all feature counts; quantile fits remain available
+for comparison with the archived analysis.
 """
 
 from __future__ import annotations
@@ -75,6 +76,13 @@ def eigenspace_gap(
         weights, ritz_values, ritz_gradients, ritz_values, ritz_gradients
     )
     cross = h1_gram(weights, exact_values, exact_gradients, ritz_values, ritz_gradients)
+    return eigenspace_gap_from_grams(exact_gram, ritz_gram, cross)
+
+
+def eigenspace_gap_from_grams(
+    exact_gram: np.ndarray, ritz_gram: np.ndarray, cross: np.ndarray
+) -> float:
+    """The same principal-angle distance from already assembled H1 Gram matrices."""
     aligned = _inverse_square_root(exact_gram) @ cross @ _inverse_square_root(ritz_gram)
     cosines = np.linalg.svd(aligned, compute_uv=False)
     smallest = float(np.clip(np.min(cosines), 0.0, 1.0))
@@ -107,6 +115,19 @@ def best_approximation_error(
     cross = h1_gram(
         weights, exact_values, exact_gradients, trial_values, trial_gradients
     )
+    return best_approximation_from_grams(
+        exact_gram, trial_gram, cross, relative_tolerance=relative_tolerance
+    )
+
+
+def best_approximation_from_grams(
+    exact_gram: np.ndarray,
+    trial_gram: np.ndarray,
+    cross: np.ndarray,
+    *,
+    relative_tolerance: float = 1.0e-12,
+) -> float:
+    """The H1 projection error, using the same normalization as field evaluation."""
     exact_gram = 0.5 * (exact_gram + exact_gram.T)
     trial_gram = 0.5 * (trial_gram + trial_gram.T)
 
@@ -188,6 +209,7 @@ def bootstrap_slope_interval(
     level: float = 0.9,
     replicates: int = 4000,
     base_seed: int = 2031071401,
+    statistic: str = "quantile",
 ) -> tuple[float, float]:
     """A 95 percent interval for the fitted rate, resampling the draws.
 
@@ -197,6 +219,20 @@ def bootstrap_slope_interval(
     is derived from the field name, so that two quantities fitted in the same run
     do not share a resampling pattern.
     """
+    if statistic not in {"mean", "quantile"}:
+        raise ValueError(f"unknown statistic: {statistic}")
+    if statistic == "mean":
+        # Pair resamples across error fields, as in the refined Example 1 study.
+        rng = np.random.default_rng(base_seed)
+        x = np.log(np.asarray(sizes, dtype=float))
+        weights = (x - x.mean()) / np.sum((x - x.mean()) ** 2)
+        means = []
+        for size in sizes:
+            sample = np.asarray([float(row[field]) for row in trials if int(row["N"]) == size])
+            indices = rng.integers(0, len(sample), (replicates, len(sample)))
+            means.append(sample[indices].mean(axis=1))
+        slopes = np.log(np.column_stack(means)) @ weights
+        return tuple(float(v) for v in np.quantile(slopes, [.025, .975]))
     rng = np.random.default_rng(base_seed + sum(ord(char) for char in field))
     grouped = {
         size: np.asarray([float(row[field]) for row in trials if int(row["N"]) == size])

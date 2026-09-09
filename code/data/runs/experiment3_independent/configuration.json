@@ -1,0 +1,32 @@
+{
+  "assembly_points": 4194304,
+  "assembly_density": "beta22",
+  "feature_seed_base": 20260603,
+  "assembly_scramble_rule": "203406+17*len(potential)",
+  "feature_counts": [
+    128,
+    256,
+    384,
+    512
+  ],
+  "draws_per_budget": 20,
+  "truncation_tolerance": 1e-05,
+  "rfm_final_evaluation": "product integrals of fixed feature fields",
+  "drm_final_scrambles": [
+    91094001,
+    91094002
+  ],
+  "drm_final_points_per_scramble": 16777216,
+  "drm_boundary_points_per_face": 65536,
+  "drm_boundary_rule": "scipy Sobol; seed=scramble+1000+face; equal face average",
+  "drm_estimator": "(mean(domain_energy)+2000*mean(boundary_mean))/mean(mass)",
+  "timing": "diagnostic elapsed times on a shared device; no timing comparison is claimed",
+  "checkpoint_sha256": {
+    "square_mode1.pt": "02dd4307207a9e2e4442b179f3f62137a8a2cb8f534cc33429b519adba9eb03f",
+    "square_mode2.pt": "cdec36973bf9431ae31874f297fb88ec7f480c7efd376891a9172a06cd2fc639",
+    "square_mode3.pt": "7b8e25f767066cf4834b237bfa6dcb0117f41725c4e7b30c7baa49dee04debd8",
+    "exp_mode1.pt": "e23ddaec1b378ffe52a075e7585c2f74b0c83a3f637ca69b7e7845e687b4d923",
+    "exp_mode2.pt": "95fa43fc76e4ed5483594c999a3e57013fbf991799a04891d2bbdc5622f0bf8d",
+    "exp_mode3.pt": "29f2b5ab54f2b848006f7f648f8b9754a4cf53f8c23f09733545b21008b31098"
+  }
+}

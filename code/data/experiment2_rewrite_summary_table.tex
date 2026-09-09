@@ -2,27 +2,27 @@
 \centering
 \small
 \setlength{\tabcolsep}{5pt}
-\caption{Maximum relative errors over the first ten eigenvalues and computation times of the isoparametric \(P_2\) finite element method, Eig-PIELM, and the RFM for the radially graded unit ball. RFM entries are medians over twenty independent feature draws, with the observed range in brackets.}
+\caption{Maximum relative errors over the first ten eigenvalues and computation times of the isoparametric \(P_2\) finite element method, Eig-PIELM, and the RFM for the radially graded unit ball. For the finite element method, \(n\) denotes the number of mesh refinements. RFM entries are medians over twenty independent feature draws.}
 \label{tab:ball_benchmark_summary}
 \begin{tabular}{llrl}
 \toprule
 method & resolution & time (s) & maximum relative error\\
 \midrule
-\(P_2\) FEM & \(h=1/1\) & 0.02 & \(3.56\times 10^{-1}\)\\
-\(P_2\) FEM & \(h=1/2\) & 0.06 & \(4.37\times 10^{-2}\)\\
-\(P_2\) FEM & \(h=1/3\) & 0.90 & \(6.35\times 10^{-3}\)\\
-\(P_2\) FEM & \(h=1/4\) & 59.91 & \(7.88\times 10^{-4}\)\\
+\(P_2\) FEM & \(n=1\) & 0.0211 & \(3.56\times 10^{-1}\)\\
+\(P_2\) FEM & \(n=2\) & 0.0557 & \(4.37\times 10^{-2}\)\\
+\(P_2\) FEM & \(n=3\) & 0.901 & \(6.35\times 10^{-3}\)\\
+\(P_2\) FEM & \(n=4\) & 59.9 & \(7.88\times 10^{-4}\)\\
 \midrule
 Eig-PIELM & \(\deg=6\) & 1.03 & \(1.28\times 10^{-1}\)\\
 Eig-PIELM & \(\deg=8\) & 4.49 & \(3.43\times 10^{-2}\)\\
 Eig-PIELM & \(\deg=9\) & 9.31 & \(2.75\times 10^{-2}\)\\
-Eig-PIELM & \(\deg=10\) & 11.21 & \(6.80\times 10^{-3}\)\\
+Eig-PIELM & \(\deg=10\) & 11.2 & \(6.80\times 10^{-3}\)\\
 \midrule
-RFM & \(N=100\) & 0.07 & \(4.56\times 10^{-1}\,[1.68\times 10^{-1},9.89\times 10^{-1}]\)\\
-RFM & \(N=200\) & 0.20 & \(1.62\times 10^{-2}\,[4.70\times 10^{-3},1.47\times 10^{-1}]\)\\
-RFM & \(N=400\) & 0.64 & \(6.71\times 10^{-4}\,[3.97\times 10^{-4},1.17\times 10^{-3}]\)\\
-RFM & \(N=600\) & 1.33 & \(1.33\times 10^{-4}\,[8.06\times 10^{-5},1.91\times 10^{-4}]\)\\
-RFM & \(N=900\) & 2.77 & \(3.22\times 10^{-5}\,[2.23\times 10^{-5},4.64\times 10^{-5}]\)\\
+RFM & \(N=100\) & 0.0744 & \(4.56\times 10^{-1}\)\\
+RFM & \(N=200\) & 0.203 & \(1.62\times 10^{-2}\)\\
+RFM & \(N=400\) & 0.637 & \(6.71\times 10^{-4}\)\\
+RFM & \(N=600\) & 1.33 & \(1.33\times 10^{-4}\)\\
+RFM & \(N=900\) & 2.77 & \(3.22\times 10^{-5}\)\\
 \bottomrule
 \end{tabular}
 \end{table}

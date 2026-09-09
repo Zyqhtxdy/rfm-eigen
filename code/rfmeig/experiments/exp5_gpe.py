@@ -37,6 +37,7 @@ import numpy as np
 from rfmeig import provenance
 from rfmeig.baselines.weak_galerkin import WeakGalerkinSettings, solve_weak_galerkin
 from rfmeig.box_basis import BoxFeatureBasis
+from rfmeig.final_evaluation import scalar_gpe_observables
 from rfmeig.nonlinear import RiemannianSettings, solve_scalar_riemannian
 from rfmeig.problems.condensate import get_paper_benchmark
 
@@ -62,6 +63,7 @@ FEATURE_WIDTH = 0.09
 CENTER_SPREAD = 0.3
 QUADRATURE_ORDER = 56
 EVALUATION_ORDER = 84
+FINAL_EVALUATION_ORDER = 112
 MASS_CUTOFF = 1.0e-12
 MAX_ITERATIONS = 220
 RESIDUAL_TOLERANCE = 1.0e-10
@@ -126,16 +128,21 @@ def run_weak_galerkin_call(subdivisions: int, epsilon: float) -> tuple[Any, Any,
     )
 
 
-def _rfm_row(features: int, seed: int, result, seconds: float) -> dict[str, Any]:
+def _rfm_row(features: int, seed: int, result, seconds: float, *, basis) -> dict[str, Any]:
+    final = scalar_gpe_observables(
+        get_paper_benchmark(BENCHMARK), basis, result.coefficients,
+        order=FINAL_EVALUATION_ORDER,
+    )
     return {
         "method": "RFM",
         "features": int(features),
         "seed": int(seed),
         "retained": int(result.retained_rank),
-        "lambda": float(result.eigenvalue),
-        "energy": float(result.energy),
-        "lambda_abs_error": abs(float(result.eigenvalue) - REFERENCE_LAMBDA),
-        "energy_abs_error": abs(float(result.energy) - REFERENCE_ENERGY),
+        **final,
+        "optimization_lambda": float(result.eigenvalue),
+        "optimization_energy": float(result.energy),
+        "lambda_abs_error": abs(final["lambda"] - REFERENCE_LAMBDA),
+        "energy_abs_error": abs(final["energy"] - REFERENCE_ENERGY),
         "weak_residual": float(result.weak_residual),
         "pde_residual_rms": float(result.pde_residual_rms),
         "iterations": int(result.iterations),
@@ -296,6 +303,7 @@ def main(argv: list[str] | None = None) -> None:
 
     configuration = {
         "benchmark": BENCHMARK,
+        "final_evaluation_order": FINAL_EVALUATION_ORDER,
         "reference": {"lambda": REFERENCE_LAMBDA, "energy": REFERENCE_ENERGY},
         "reference_provenance": "independent spectral solution, not either method",
         "feature_counts": list(args.feature_counts),
@@ -309,7 +317,7 @@ def main(argv: list[str] | None = None) -> None:
         "weak_galerkin_epsilon": WEAK_GALERKIN_EPSILON,
         "repeats": args.repeats,
         "threads": args.threads,
-        "timing_scope": "construction and solve, one thread, methods interleaved",
+        "timing_scope": f"construction and solve, {args.threads} thread(s), methods interleaved",
     }
     run = provenance.open_run(
         EXPERIMENT, config=configuration, run_id=args.run_id, resume=args.resume
@@ -336,8 +344,8 @@ def main(argv: list[str] | None = None) -> None:
 
         if method == "rfm":
             features, seed, repeat = parameters
-            _, result, seconds = run_rfm_call(features, seed)
-            row = _rfm_row(features, seed, result, seconds)
+            basis, result, seconds = run_rfm_call(features, seed)
+            row = _rfm_row(features, seed, result, seconds, basis=basis)
         else:
             subdivisions, epsilon, repeat = parameters
             _, result, seconds = run_weak_galerkin_call(subdivisions, epsilon)

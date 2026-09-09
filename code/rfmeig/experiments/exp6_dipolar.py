@@ -23,7 +23,7 @@ source's own product order, fixed before any timing is observed.
 
 *What the reference is.*  Li et al. build theirs at a mesh width of one
 sixteenth; their own table shows the quarter-width energy already within
-:math:`9\times10^{-14}` of it, six orders below the errors under comparison, so
+:math:`9\times10^{-14}` of it, well below the errors under comparison, so
 the quarter-width solution is recomputed here and used as the reference.  It is
 still checked against their printed values before anything is measured against
 it.
@@ -52,6 +52,7 @@ from rfmeig.baselines.gflm_ktm_threaded import (
     solve_gflm_ktm_threaded,
 )
 from rfmeig.box_basis import BoxFeatureBasis
+from rfmeig.final_evaluation import dipolar_fields_on_reference_nodes
 from rfmeig.problems.dipolar import (
     DipolarBenchmark,
     DipolarSettings,
@@ -160,7 +161,7 @@ def phase_free_error(reference: np.ndarray, approximate: np.ndarray) -> float:
     r"""Li et al. (4.2): :math:`\max|\phi-\phi^h|/\max|\phi|`, phase removed.
 
     The energy depends on the components only through their densities, so each
-    carries an arbitrary global phase.  The phase that minimizes the difference
+    carries an arbitrary global phase.  The phase that minimizes the L2 difference
     is divided out before the maximum is taken; without that step the quantity
     measures whatever phase the solver happened to return.
     """
@@ -403,6 +404,7 @@ def main(argv: list[str] | None = None) -> None:
         "feature_widths": list(FEATURE_WIDTHS),
         "center_spread": CENTER_SPREAD,
         "grid_size": GRID_SIZE,
+        "field_evaluation_nodes": "GFLM-KTM left-endpoint reference nodes",
         "timed_initial_pairs": args.timed_pairs,
         "initial_state_rule": (
             "ordered product of the source's ten formulas for two components; "
@@ -414,6 +416,7 @@ def main(argv: list[str] | None = None) -> None:
         "threads": args.threads,
         "workers": args.workers,
         "sides": args.sides,
+        "best_pair_index": args.best_pair_index,
     }
     run = provenance.open_run(
         EXPERIMENT, config=configuration, run_id=args.run_id, resume=args.resume
@@ -424,7 +427,7 @@ def main(argv: list[str] | None = None) -> None:
         search = {"best_pair_index": args.best_pair_index, "source": "given"}
     else:
         recorded = run.completed("search")
-        if recorded is not None and args.skip_search:
+        if recorded is not None:
             search = recorded
         else:
             print("searching the prescribed initial states", flush=True)
@@ -468,7 +471,7 @@ def main(argv: list[str] | None = None) -> None:
 
     rows: list[dict[str, Any]] = []
 
-    def measured(result, mesh_width: float | None) -> dict[str, float]:
+    def measured(result, mesh_width: float | None, *, fields=None) -> dict[str, float]:
         """Errors of one solved state against the reference, on the coarse nodes.
 
         A coarse mesh is a subset of the reference mesh, so the reference is
@@ -478,7 +481,7 @@ def main(argv: list[str] | None = None) -> None:
         evaluated on the reference's own grid, as the random feature states are.
         """
         stride = 1 if mesh_width is None else restriction_stride(mesh_width)
-        states = result.states
+        states = result.states if fields is None else fields
         mu = result.chemical_potentials
         return {
             "energy": float(result.energy),
@@ -604,7 +607,9 @@ def main(argv: list[str] | None = None) -> None:
             "iterations": int(result.iterations),
             "converged": bool(result.converged),
             "wall_seconds": seconds,
-            **measured(grid, None),
+            **measured(grid, None, fields=dipolar_fields_on_reference_nodes(
+                benchmark, basis, result.feature_coefficients, reference_states[0].shape
+            )),
         }
         rows.append(run.complete(call_id, row))
         print(

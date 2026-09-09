@@ -3,69 +3,103 @@
     "experiment1_rewrite_summary_table.tex": {
       "claimed_in_caption": 100,
       "recorded_in_run": 100,
-      "source": "data/experiment1_theory_matched_trials.csv",
       "match": true
     },
     "experiment2_rewrite_summary_table.tex": {
       "claimed_in_caption": 20,
       "recorded_in_run": 20,
-      "source": "data/experiment2_graded_ball_run.json",
-      "match": true
-    },
-    "experiment3_rewrite_summary_table.tex": {
-      "claimed_in_caption": 20,
-      "recorded_in_run": 20,
-      "source": "data/runs/experiment3/rfm_summary.csv",
       "match": true
     },
     "experiment4_rewrite_summary_table.tex": {
       "claimed_in_caption": 20,
       "recorded_in_run": 20,
-      "source": "data/runs/experiment4/rfm_rows.csv",
       "match": true
     },
     "experiment5_nonlinear_gpe_table.tex": {
-      "claimed_in_caption": 20,
-      "recorded_in_run": 20,
-      "source": "data/experiment5_rfm_timed.csv",
+      "claimed_in_caption": {
+        "128": 19,
+        "256": 20,
+        "384": 18,
+        "512": 19,
+        "768": 19
+      },
+      "recorded_in_run": {
+        "128": 19,
+        "256": 20,
+        "384": 18,
+        "512": 19,
+        "768": 19
+      },
       "match": true
     },
     "experiment6_dipolar_bec_table.tex": {
       "claimed_in_caption": 10,
       "recorded_in_run": 10,
-      "source": "data/experiment6_rfm_timed.csv",
       "match": true
+    }
+  },
+  "experiment1": {
+    "validation_draws": 800,
+    "calibration_draws": 160,
+    "order": 512,
+    "summaries_recomputed": true,
+    "calibration_recomputed": true
+  },
+  "experiment1_quadrature": {
+    "solves": 2880,
+    "orders": [
+      128,
+      256,
+      512
+    ],
+    "summary_rows": 48,
+    "matched": true
+  },
+  "experiment3": {
+    "trials": 160,
+    "summary_rows": 96,
+    "matched": true
+  },
+  "hashes": {
+    "core_files_verified": 63,
+    "archived_exports": {
+      "experiment3": {
+        "packaged_files_verified": 3,
+        "per_call_logs_not_packaged": 160
+      },
+      "experiment4": {
+        "packaged_files_verified": 23,
+        "per_call_logs_not_packaged": 20
+      }
     }
   },
   "tables": {
     "experiment1_rewrite_summary_table.tex": {
-      "sha256": "a9a4cc001fb1a968b64bfcd672028b07735b9c1e020d7cfad332f571840e41e2",
-      "rebuilt": false
-    },
-    "experiment2_rewrite_summary_table.tex": {
-      "sha256": "19260aa4f5a89036f86b779168c922eb53a1719ca11de08bb15a4b8a4ef56ec9",
+      "sha256": "b6039f91a975837f596ef23cb8647ccc2774e7095a6022f2691d0acb39adbd37",
       "rebuilt": true,
       "unchanged_by_rebuild": true
     },
-    "experiment3_rewrite_summary_table.tex": {
-      "sha256": "3ed42ab349aa961710742f7a51ed4ca9c92c875908f651b21d7ca45d7ad9463e",
+    "experiment2_rewrite_summary_table.tex": {
+      "sha256": "389b2b5ebd787d37726e4f5bd4b94a593ca10e11dbe514909b5135ef056031d9",
       "rebuilt": true,
       "unchanged_by_rebuild": true
     },
     "experiment4_rewrite_summary_table.tex": {
-      "sha256": "ae515e428732271290d03c7be19f8d170ee948664795fc70babd2aa4481300d3",
-      "rebuilt": false
+      "sha256": "c7a8e2dd7d350730c5be0f4e385b06ec2c06d9d66efcb43327ec4fa0b9cb7801",
+      "rebuilt": true,
+      "unchanged_by_rebuild": true
     },
     "experiment5_nonlinear_gpe_table.tex": {
-      "sha256": "f1e1e2b76eec8951b73489ed496ee002f23a7b3db950d5f62dea29e248b6e61b",
+      "sha256": "2ed84dc86fb208ff217202880c350a9e9f1b20097cdfb71ba019b769ec69bd3c",
       "rebuilt": true,
       "unchanged_by_rebuild": true
     },
     "experiment6_dipolar_bec_table.tex": {
-      "sha256": "20f39d46b73cd15d9bc4085cc6e88e8fb5d23595ab12dce25e1611eae8e49207",
+      "sha256": "dc28e353fc5049ab4fab61ff4a3cd58ad06d331090230c6fc30f08003792ad71",
       "rebuilt": true,
       "unchanged_by_rebuild": true
     }
   },
-  "passed": true
+  "passed": true,
+  "failures": []
 }

@@ -7,11 +7,14 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.ticker import NullFormatter
+from matplotlib.ticker import NullLocator
 
-from paper_assets.paths import DATA, FIGURES, ROOT
+from paper_assets.formatting import tex_time_seconds
+from paper_assets.paths import DATA, FIGURES, REPO_DATA, ROOT
+from paper_assets.records import converged_rows, repetitions_per_draw
 
-DATA_DIR = DATA
+DATA_DIR = REPO_DATA
+TABLE_DIR = DATA
 FIG_DIR = FIGURES
 
 
@@ -68,6 +71,7 @@ def write_text(path: Path, content: str) -> None:
     """Write a generated file with the newlines .gitattributes expects, so
     that a rebuild on Windows does not differ from the committed copy by
     line endings alone."""
+    path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="\n") as handle:
         handle.write(content.rstrip() + "\n")
 
@@ -75,38 +79,20 @@ def write_text(path: Path, content: str) -> None:
 def tex_sci(value: float) -> str:
     mantissa, exponent = f"{float(value):.2e}".split("e")
     return rf"{mantissa}\times 10^{{{int(exponent)}}}"
-def tex_measurement(median: float, minimum: float, maximum: float) -> str:
-    # The range sits under the median rather than beside it.  Side by side, the
-    # two error columns of Table 6 are wide enough to force the whole table
-    # down to \scriptsize; stacked, the same numbers fit at \small.
-    #
-    # A nested tabular rather than \shortstack: the latter sets its baseline at
-    # the foot of the stack, so the median climbed into the row above it.  The
-    # [t] alignment keeps the median on its own row and hangs the range below.
-    return (
-        r"\begin{tabular}[t]{@{}r@{}}"
-        rf"\({tex_sci(median)}\)\\"
-        rf"\([{tex_sci(minimum)},{tex_sci(maximum)}]\)"
-        r"\end{tabular}"
-    )
 
 
 def plot_experiment1() -> None:
-    frame = pd.read_csv(
-        DATA_DIR / "experiment1_theory_matched_summary.csv"
-    ).sort_values("N")
-    metadata = json.loads(
-        (DATA_DIR / "experiment1_theory_matched_metadata.json").read_text(
-            encoding="utf-8"
-        )
-    )
+    frame = pd.read_csv(DATA_DIR / "experiment1_theory_matched_summary.csv").sort_values("N")
     guides = json.loads(
         (DATA_DIR / "experiment1_rate_guides.json").read_text(encoding="utf-8")
     )
-    draw_count = int(frame["samples"].iloc[0])
     budgets = frame["N"].to_numpy()
-    gaps = frame["h1_gap_q90"].to_numpy()
-    eigenvalue_errors = frame["cluster_relative_error_q90"].to_numpy()
+    # The arithmetic mean over the draws at each budget. The quadrature is
+    # resolved to the point where the three orders that were compared agree in
+    # the fitted slope to six decimals, so every draw carries the rate and the
+    # mean is not held up by an unresolved one.
+    gaps = frame["h1_gap_mean"].to_numpy()
+    eigenvalue_errors = frame["cluster_relative_error_mean"].to_numpy()
     gap_reference = float(guides["gap_constant"]) * budgets ** (-0.5)
     eigenvalue_reference = float(guides["eigenvalue_constant"]) * budgets ** (-1.0)
     gap_ratio = gaps / gap_reference
@@ -121,14 +107,18 @@ def plot_experiment1() -> None:
             RuntimeWarning,
             stacklevel=2,
         )
-    gap_slope = float(metadata["gap_q90_slope"])
-    eigenvalue_slope = float(metadata["eigenvalue_q90_slope"])
-    gap_interval = metadata["gap_q90_slope_bootstrap_95"]
-    eigenvalue_interval = metadata[
-        "eigenvalue_q90_slope_bootstrap_95"
-    ]
-
-    figure, axes = plt.subplots(1, 2, figsize=page_size(0.96, 2.55))
+    # Margins are fixed rather than left to tight_layout, because the shape of
+    # the axes box is what a reader reads a slope from: a flatter box makes the
+    # same exponent look gentler. Height over width is held at 0.714.
+    left, right, top, bottom, wspace = 0.105, 0.985, 0.895, 0.225, 0.30
+    width = page_size(0.96, 1.0)[0]
+    panel_width = width * (right - left) / (2 + wspace)
+    figure, axes = plt.subplots(
+        1, 2, figsize=(width, 0.714 * panel_width / (top - bottom))
+    )
+    figure.subplots_adjust(
+        left=left, right=right, top=top, bottom=bottom, wspace=wspace
+    )
     axes[0].loglog(
         budgets,
         gaps,
@@ -136,7 +126,6 @@ def plot_experiment1() -> None:
         color="#274c77",
         linewidth=1.4,
         markersize=4.0,
-        label=r"$Q_{0.9}(\operatorname{gap}_{H^1})$",
     )
     axes[0].loglog(
         budgets,
@@ -144,31 +133,22 @@ def plot_experiment1() -> None:
         color="#222222",
         linestyle="--",
         linewidth=1.1,
-        label=r"reference $C_HN^{-1/2}$",
+        label=r"reference $O(N^{-1/2})$",
     )
+    # The panel title and the caption already name the quantity, and the caption
+    # carries the statistic, so an axis label would state the same thing a third
+    # time in the one notation a reader has to decode.
     axes[0].set_title(r"(a) $H^1$ eigenspace gap")
     axes[0].set_xlabel(r"number of features $N$")
-    axes[0].set_ylabel(r"$Q_{0.9}(\operatorname{gap}_{H^1})$")
-    axes[0].text(
-        0.05,
-        0.08,
-        rf"observed $N^{{{gap_slope:.3f}}}$"
-        + "\n"
-        + rf"95% CI $[{gap_interval[0]:.3f},{gap_interval[1]:.3f}]$",
-        transform=axes[0].transAxes,
-        fontsize=8,
-        va="bottom",
-    )
-    axes[0].legend(loc="upper right", frameon=False)
+    axes[0].legend(loc="lower left", frameon=False)
 
     axes[1].loglog(
         budgets,
         eigenvalue_errors,
-        marker="^",
+        marker="o",
         color="#4f7f52",
         linewidth=1.4,
-        markersize=4.2,
-        label=r"$Q_{0.9}(e_{\rm cl})$",
+        markersize=4.0,
     )
     axes[1].loglog(
         budgets,
@@ -176,63 +156,55 @@ def plot_experiment1() -> None:
         color="#222222",
         linestyle="--",
         linewidth=1.1,
-        label=r"reference $C_\lambda N^{-1}$",
+        label=r"reference $O(N^{-1})$",
     )
     axes[1].set_title(r"(b) Eigenvalue error")
     axes[1].set_xlabel(r"number of features $N$")
-    axes[1].set_ylabel(r"$Q_{0.9}(e_{\rm cl})$")
-    axes[1].text(
-        0.05,
-        0.08,
-        rf"observed $N^{{{eigenvalue_slope:.3f}}}$"
-        + "\n"
-        + rf"95% CI $[{eigenvalue_interval[0]:.3f},{eigenvalue_interval[1]:.3f}]$",
-        transform=axes[1].transAxes,
-        fontsize=8,
-        va="bottom",
-    )
-    axes[1].legend(loc="upper right", frameon=False)
+    axes[1].legend(loc="lower left", frameon=False)
 
-    tick_values = budgets.astype(float)
-    # Eight labels do not fit across a panel of this width, so the ticks all
-    # stay and every other budget is named.
-    named = {0, 2, 5, len(tick_values) - 1}
-    tick_labels = [
-        str(int(value)) if index in named else ""
-        for index, value in enumerate(tick_values)
-    ]
+    # Powers of two are evenly spaced on this scale and few enough to fit;
+    # the markers show where the eight budgets themselves fall, and Table 1
+    # lists them.
+    ticks = [128.0, 256.0, 512.0, 1024.0]
     for axis in axes:
-        axis.set_xticks(tick_values)
-        axis.set_xticklabels(tick_labels)
-        axis.xaxis.set_minor_formatter(NullFormatter())
-        axis.set_xlim(budgets[0] * 0.96, budgets[-1] * 1.04)
+        axis.set_xticks(ticks)
+        axis.set_xticklabels([str(int(value)) for value in ticks])
+        axis.xaxis.set_minor_locator(NullLocator())
+        axis.set_xlim(budgets[0] * 0.96, ticks[-1] * 1.03)
         axis.grid(True, which="major", color="#d7d7d7", linewidth=0.6)
-    figure.tight_layout()
+    FIG_DIR.mkdir(parents=True, exist_ok=True)
     figure.savefig(FIG_DIR / "experiment1_rewrite_overview.pdf")
     plt.close(figure)
 
+    build_experiment1_table()
+
+
+def build_experiment1_table(*, output_directory: Path | None = None) -> None:
+    """Build Table 1 independently of its figure, for read-only auditing."""
+    frame = pd.read_csv(DATA_DIR / "experiment1_theory_matched_summary.csv").sort_values("N")
+    draw_count = int(frame["samples"].iloc[0])
     lines = [
         r"\begin{table}[!htbp]",
         r"\centering",
         r"\small",
         r"\setlength{\tabcolsep}{4pt}",
-        rf"\caption{{Empirical error statistics for the exact double eigenvalue \(\lambda_7=\lambda_8\), based on {draw_count} independent feature draws at each \(N\).}}",
+        rf"\caption{{Errors for the exact double eigenvalue \(\lambda_7=\lambda_8\).  Each entry is the arithmetic mean over {draw_count} independent feature draws.}}",
         r"\label{tab:experiment1_h1_middle}",
         r"\begin{tabular}{rrrr}",
         r"\toprule",
-        r"$N$ & $Q_{0.9}(\zeta_N(F_\star))$ & $Q_{0.9}(\operatorname{gap}_{H^1})$ & $Q_{0.9}(e_{\rm cl})$\\",
+        r"$N$ & $\zeta_N(F_\star)$ & $d_{H^1}(E_\star,E_{\star,N})$ & $e_{\rm cl}$\\",
         r"\midrule",
     ]
     for _, row in frame.iterrows():
         lines.append(
             rf"{int(row['N'])} & "
-            rf"\({tex_sci(row['eta_f_h1_q90'])}\) & "
-            rf"\({tex_sci(row['h1_gap_q90'])}\) & "
-            rf"\({tex_sci(row['cluster_relative_error_q90'])}\)\\"
+            rf"\({tex_sci(row['eta_f_h1_mean'])}\) & "
+            rf"\({tex_sci(row['h1_gap_mean'])}\) & "
+            rf"\({tex_sci(row['cluster_relative_error_mean'])}\)\\"
         )
     lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}"])
     write_text(
-        DATA_DIR / "experiment1_rewrite_summary_table.tex", "\n".join(lines)
+        (output_directory or TABLE_DIR) / "experiment1_rewrite_summary_table.tex", "\n".join(lines)
     )
 
 
@@ -251,74 +223,8 @@ def _experiment2_rows(run: dict, method: str) -> list[dict]:
     return [row for row in run["rows"] if row["method"] == method]
 
 
-def plot_experiment2() -> None:
-    """Cost against accuracy for the three methods on the unit ball.
 
-    Errors rather than eigenvalues, because the spectrum is known in closed
-    form and there is no fitted limit to draw; and both axes logarithmic,
-    because the three curves are separated by decades rather than by factors.
-    """
-    run = _experiment2_run()
-    figure, axis = plt.subplots(1, 1, figsize=page_size(0.78, 2.55))
-
-    series = (
-        ("P2 FEM", r"$P_2$ FEM", "#274c77", "o"),
-        ("Eig-PIELM", "Eig-PIELM", "#4a7c59", "^"),
-    )
-    for key, label, color, marker in series:
-        rows = _experiment2_rows(run, key)
-        axis.loglog(
-            [row["median_seconds"] for row in rows],
-            [row["median_error"] for row in rows],
-            marker=marker, color=color, linewidth=1.3, markersize=4.0,
-            label=label,
-        )
-
-    rows = _experiment2_rows(run, "RFM")
-    seconds = np.array([row["median_seconds"] for row in rows])
-    median = np.array([row["median_error"] for row in rows])
-    axis.errorbar(
-        seconds, median,
-        yerr=np.vstack([
-            median - np.array([row["min_error"] for row in rows]),
-            np.array([row["max_error"] for row in rows]) - median,
-        ]),
-        marker="s", color="#9a5b35", linewidth=1.3, markersize=4.0,
-        capsize=3.0, label="RFM",
-    )
-    # Only the two ends of the sampled curve are named.  Labelling all five
-    # budgets put text on the curve it labelled and crowded the last two
-    # together; the budgets themselves are the second column of Table 2, and
-    # what the figure has to say is that the curve runs from one corner to the
-    # other while the baselines do not.
-    # both to the right of their markers, which is empty on either end
-    for index, offset, align in ((0, (8, 0), "left"), (-1, (8, 0), "left")):
-        axis.annotate(
-            rf"$N={int(rows[index]['features'])}$",
-            (seconds[index], median[index]),
-            textcoords="offset points", xytext=offset, ha=align,
-            va="center", fontsize=7.5, color="#9a5b35",
-        )
-
-    axis.set_xlabel("time (s)")
-    axis.set_ylabel("maximum relative error")
-    # Limits from the data rather than fixed: the range the three curves cover
-    # depends on the problem, and a window sized for a different one leaves
-    # empty decades that flatten everything into the top of the frame.
-    times = [row["median_seconds"] for row in run["rows"]]
-    errors = [row["median_error"] for row in run["rows"]]
-    errors += [row["min_error"] for row in _experiment2_rows(run, "RFM")]
-    axis.set_xlim(min(times) / 2.0, max(times) * 3.0)
-    axis.set_ylim(min(errors) / 5.0, max(errors) * 3.0)
-    axis.legend(frameon=False, loc="lower left")
-    axis.grid(True, which="major", color="#d7d7d7", linewidth=0.6)
-    figure.tight_layout()
-    figure.savefig(FIG_DIR / "experiment2_error_versus_time.pdf")
-    figure.savefig(FIG_DIR / "experiment2_error_versus_time.png", dpi=240)
-    plt.close(figure)
-
-
-def build_experiment2_table() -> None:
+def build_experiment2_table(*, output_directory: Path | None = None) -> None:
     """The three cost-accuracy curves as a table.
 
     The dimension column is the size of the eigenproblem each method actually
@@ -337,8 +243,9 @@ def build_experiment2_table() -> None:
             r"\caption{Maximum relative errors over the first ten eigenvalues "
             r"and computation times of the isoparametric \(P_2\) finite element "
             r"method, Eig-PIELM, and the RFM for the radially graded unit ball. "
+            r"For the finite element method, \(n\) denotes the number of mesh refinements. "
             rf"RFM entries are medians over {_spelled_count(draws)} independent "
-            r"feature draws, with the observed range in brackets.}"
+            r"feature draws.}"
         ),
         r"\label{tab:ball_benchmark_summary}",
         r"\begin{tabular}{llrl}",
@@ -348,28 +255,27 @@ def build_experiment2_table() -> None:
     ]
     for row in _experiment2_rows(run, "P2 FEM"):
         lines.append(
-            rf"\(P_2\) FEM & \({row['setting']}\) & "
-            rf"{row['median_seconds']:.2f} & "
+            rf"\(P_2\) FEM & \(n={int(row['subdivisions'])}\) & "
+            rf"{tex_time_seconds(row['median_seconds'])} & "
             rf"\({tex_sci(row['median_error'])}\)\\"
         )
     lines.append(r"\midrule")
     for row in _experiment2_rows(run, "Eig-PIELM"):
         lines.append(
             rf"Eig-PIELM & \(\deg={row['degree']}\) & "
-            rf"{row['median_seconds']:.2f} & "
+            rf"{tex_time_seconds(row['median_seconds'])} & "
             rf"\({tex_sci(row['median_error'])}\)\\"
         )
     lines.append(r"\midrule")
     for row in _experiment2_rows(run, "RFM"):
         lines.append(
             rf"RFM & \(N={int(row['features'])}\) & "
-            rf"{row['median_seconds']:.2f} & "
-            rf"\({tex_sci(row['median_error'])}\,["
-            rf"{tex_sci(row['min_error'])},{tex_sci(row['max_error'])}]\)\\"
+            rf"{tex_time_seconds(row['median_seconds'])} & "
+            rf"\({tex_sci(row['median_error'])}\)\\"
         )
     lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}"])
     write_text(
-        DATA_DIR / "experiment2_rewrite_summary_table.tex", "\n".join(lines)
+        (output_directory or TABLE_DIR) / "experiment2_rewrite_summary_table.tex", "\n".join(lines)
     )
 
 
@@ -384,7 +290,7 @@ def _spelled_count(count: int) -> str:
 #: The random feature run the Example 3 entries are taken from.  The archived
 #: aggregation holds the five draws of the original run and is left as it
 #: stands; this run repeats the same configuration over twenty draws.
-EXPERIMENT3_RFM_RUN = DATA_DIR / "runs" / "experiment3"
+EXPERIMENT3_RFM_RUN = DATA_DIR / "runs" / "experiment3_independent"
 
 
 def _experiment3_rfm() -> pd.DataFrame:
@@ -397,54 +303,6 @@ def _experiment3_rfm() -> pd.DataFrame:
     return frame[frame["eigen_index"] <= 3].reset_index(drop=True)
 
 
-def build_experiment3_table() -> None:
-    """Table 3, with both methods measured by one quadrature rule.
-
-    The Deep Ritz eigenvalue is a Rayleigh quotient of a trained network, and
-    the value reported here is that quotient re-evaluated on the rule the RFM
-    assembles with.  The networks are the stored ones; nothing is retrained,
-    and the re-evaluation lowers every Deep Ritz error, so the comparison is
-    not made favourable by the change.
-    """
-    frame = pd.read_csv(DATA_DIR / "experiment3_first3_comparison.csv")
-    neural = pd.read_csv(DATA_DIR / "experiment3_drm_quadrature_reevaluation.csv")
-    key = {
-        (row["potential"], int(row["mode"])): float(row["rel_error_beta22"])
-        for _, row in neural.iterrows()
-    }
-    rfm = _experiment3_rfm()
-    reported = rfm[rfm["N"] == int(frame["rfm_size"].iloc[0])]
-    rfm_error = {
-        (row["potential"], int(row["eigen_index"])): float(row["rel_error_median"])
-        for _, row in reported.iterrows()
-    }
-    draws = _spelled_count(int(reported["trials"].iloc[0]))
-    lines = [
-        r"\begin{table}[!htbp]",
-        r"\centering",
-        r"\small",
-        r"\setlength{\tabcolsep}{4pt}",
-        rf"\caption{{Relative errors of the first three ordered eigenvalues for the ten-dimensional benchmark. RFM entries are medians over {draws} independent feature draws.}}",
-        r"\label{tab:tenD_summary_new}",
-        r"\begin{tabular}{llrr}",
-        r"\toprule",
-        r"potential & eigenvalue & DRM error & RFM error\\",
-        r"\midrule",
-    ]
-    for _, row in frame.iterrows():
-        potential = r"$t^2$" if row["potential"] == "square" else r"$e^{-\pi t}$"
-        index = int(row["eigen_index"])
-        lines.append(
-            rf"{potential} & $\lambda_{{{index}}}$ & "
-            rf"\({tex_sci(key[(row['potential'], index)])}\) & "
-            rf"\({tex_sci(rfm_error[(row['potential'], index)])}\)\\"
-        )
-    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}"])
-    write_text(
-        DATA_DIR / "experiment3_rewrite_summary_table.tex", "\n".join(lines)
-    )
-
-
 def plot_experiment3() -> None:
     """Approximated eigenvalues against the exact levels, as in Ji et al. Fig. 7.
 
@@ -455,57 +313,86 @@ def plot_experiment3() -> None:
     approach one and the same line.
     """
     eigs = _experiment3_rfm()
-    neural = pd.read_csv(DATA_DIR / "experiment3_drm_quadrature_reevaluation.csv")
-    figure, axes = plt.subplots(1, 2, figsize=page_size(0.96, 2.45))
+    neural = pd.read_csv(DATA_DIR / "experiment3_drm_independent.csv")
+    figure = plt.figure(figsize=page_size(0.96, 2.46))
+    outer = figure.add_gridspec(1, 2, wspace=0.34, left=0.10, right=0.98,
+                                top=0.905, bottom=0.285)
     titles = {"square": r"(a) $V(t)=t^{2}$", "exp": r"(b) $V(t)=e^{-\pi t}$"}
     markers = {1: "o", 2: "s", 3: "^"}
     colors = {1: "#274c77", 2: "#9a5b35", 3: "#4f7f52"}
+    handles: list = []
+    labels: list = []
 
-    for axis, potential in zip(axes, ("square", "exp")):
+    for column, potential in enumerate(("square", "exp")):
+        # The Deep Ritz estimates have no feature count, so they are given a
+        # strip of their own rather than a tick invented on the feature axis.
+        inner = outer[column].subgridspec(1, 2, width_ratios=[1.0, 0.14],
+                                          wspace=0.07)
+        axis = figure.add_subplot(inner[0])
+        strip = figure.add_subplot(inner[1], sharey=axis)
+
         subset = eigs[eigs["potential"] == potential]
         budgets = np.sort(subset["N"].unique())
+        # the reference levels run across the strip as well, so that each open
+        # marker can still be read against the line it approximates
         for level in sorted(subset["lambda_ref"].unique()):
-            axis.axhline(level, color="#555555", linestyle="--", linewidth=1.0)
+            for target in (axis, strip):
+                target.axhline(level, color="#555555", linestyle="--",
+                               linewidth=1.0)
         for index in (1, 2, 3):
             part = subset[subset["eigen_index"] == index].sort_values("N")
-            median = part["lambda_median"].to_numpy()
             axis.plot(
                 part["N"].to_numpy(),
-                median,
+                part["lambda_median"].to_numpy(),
                 marker=markers[index],
                 color=colors[index],
                 linewidth=1.3,
                 markersize=4.0,
                 label=rf"$\lambda_{index}$",
             )
-        # The Deep Ritz estimates carry the colour and the shape of the level
-        # they approximate, so that each one can be read against its own line;
-        # they are drawn open, and off the feature axis, because the method
-        # has no feature count.
+        # The estimates carry the colour and the shape of the level they
+        # approximate, and are drawn open.  Within the strip they are spread by
+        # mode, because two of them differ by less than a tenth of a percent of
+        # the axis and would otherwise coincide; the ordinate is untouched and
+        # the strip carries no scale, so the spread states nothing.
         row = neural[neural["potential"] == potential].sort_values("mode")
-        offset = budgets[-1] + 0.20 * (budgets[-1] - budgets[0])
         for _, entry in row.iterrows():
             index = int(entry["mode"])
-            axis.plot(
-                [offset],
-                [float(entry["lambda_beta22"])],
+            strip.plot(
+                [(index - 2) * 0.52],
+                [float(entry["lambda_final"])],
                 linestyle="none",
                 marker=markers[index],
                 markerfacecolor="none",
                 markeredgecolor=colors[index],
-                markersize=5.0,
-                markeredgewidth=1.6,
-                label="DRM" if index == 1 else None,
+                markersize=4.4,
+                markeredgewidth=1.35,
             )
+
         axis.set_title(titles[potential], loc="left")
         axis.set_xlabel(r"number of features $N$")
-        axis.set_xticks(list(budgets) + [offset])
-        axis.set_xticklabels([str(int(value)) for value in budgets] + ["DRM"])
-        axis.set_xlim(budgets[0] - 40, offset + 45)
+        axis.set_xticks(list(budgets))
+        axis.set_xticklabels([str(int(value)) for value in budgets])
+        axis.set_xlim(budgets[0] - 40, budgets[-1] + 40)
         axis.grid(True, which="major", color="#e2e2e2", linewidth=0.6)
-    axes[0].set_ylabel(r"eigenvalue")
-    axes[0].legend(frameon=False, loc="center right", ncol=1, fontsize=8)
-    figure.tight_layout()
+
+        strip.set_xticks([0.0])
+        strip.set_xticklabels(["DRM"])
+        strip.set_xlim(-1.05, 1.05)
+        strip.grid(False)
+        strip.tick_params(labelleft=False, left=False)
+        strip.spines["left"].set_linewidth(0.8)
+        strip.spines["left"].set_color("#999999")
+
+        if column == 0:
+            axis.set_ylabel(r"eigenvalue")
+            handles, labels = axis.get_legend_handles_labels()
+
+    # one key for both panels: the right panel had no colour key of its own
+    figure.legend(handles, labels, loc="lower center", ncol=3, frameon=False,
+                  bbox_to_anchor=(0.54, 0.008), columnspacing=2.4,
+                  handlelength=2.0)
+    FIG_DIR.mkdir(parents=True, exist_ok=True)
     figure.savefig(FIG_DIR / "experiment3_qmc_errors.pdf")
     figure.savefig(FIG_DIR / "experiment3_qmc_errors.png", dpi=240)
     plt.close(figure)
@@ -514,12 +401,12 @@ def build_experiment4_assets() -> None:
 
     # the builder resolves its own directories under the root it is given;
     # the figures of this repository live beside code, not inside it
-    generate_experiment4_assets(ROOT, figure_directory=FIGURES)
+    generate_experiment4_assets(ROOT, figure_directory=FIGURES, data_directory=TABLE_DIR)
 
 
 
-def build_experiment5_table() -> None:
-    """Table 6, from the timed comparison run.
+def build_experiment5_table(*, output_directory: Path | None = None) -> None:
+    """Table 5, from the timed comparison run.
 
     Both methods are timed in one session at one thread, and the timer covers
     mesh or basis construction, assembly and solve; error evaluation is
@@ -529,14 +416,16 @@ def build_experiment5_table() -> None:
     """
     baseline = pd.read_csv(DATA_DIR / "experiment5_wg_timed.csv")
     trials = pd.read_csv(DATA_DIR / "experiment5_rfm_timed.csv")
-    baseline = baseline.loc[baseline["converged"].astype(bool)]
-    trials = trials.loc[trials["converged"].astype(bool)]
-    draws = _spelled_count(int(trials["seed"].nunique()))
-    repeats = int(trials.groupby(["features", "seed"]).size().median())
+    baseline = converged_rows(baseline)
+    trials = converged_rows(trials)
+    sample_counts = trials.groupby("features")["seed"].nunique().sort_index()
+    feature_budgets = ",".join(str(int(size)) for size in sample_counts.index)
+    sample_sizes = ", ".join(str(int(count)) for count in sample_counts)
+    repeats = repetitions_per_draw(trials)
 
     def entry(group: pd.DataFrame, resolution: str, method: str) -> str:
-        # The weak Galerkin scheme is deterministic, so only its timing varies
-        # over the repeats; a bracket on its errors would repeat one number.
+        # The weak Galerkin scheme is deterministic, so its errors do not
+        # vary over the repeats.
         seconds = group["wall_seconds"]
         if method == "WG":
             errors = " & ".join(
@@ -549,16 +438,12 @@ def build_experiment5_table() -> None:
             # only the timing runs over the calls.
             per_draw = group.drop_duplicates(subset="seed")
             errors = " & ".join(
-                tex_measurement(
-                    per_draw[column].median(),
-                    per_draw[column].min(),
-                    per_draw[column].max(),
-                )
+                rf"\({tex_sci(per_draw[column].median())}\)"
                 for column in ("lambda_abs_error", "energy_abs_error")
             )
         return (
             rf"{method} & {resolution} & "
-            rf"{seconds.median():.2f}\,[{seconds.min():.2f},{seconds.max():.2f}] & "
+            rf"{tex_time_seconds(seconds.median())} & "
             rf"{errors}\\"
         )
 
@@ -567,7 +452,7 @@ def build_experiment5_table() -> None:
         r"\centering",
         r"\small",
         r"\setlength{\tabcolsep}{4pt}",
-        rf"\caption{{The shifted Gross--Pitaevskii problem, for the weak Galerkin scheme and the RFM. RFM entries are medians over {draws} independent feature draws, each solved {_spelled_count(repeats)} times for the clock.}}",
+        rf"\caption{{The Gross--Pitaevskii problem in Example~\ref{{ex:gpe}}, for the weak Galerkin scheme and the RFM. RFM entries are medians over the converged draws; the sample sizes for \(N={feature_budgets}\) are {sample_sizes}, respectively, with {_spelled_count(repeats)} timed repetitions per draw.}}",
         r"\label{tab:nonlinear_gpe_comparison}",
         r"\begin{tabular}{llrrr}",
         r"\toprule",
@@ -577,17 +462,17 @@ def build_experiment5_table() -> None:
     ]
     for size in sorted(baseline["subdivisions"].unique()):
         group = baseline.loc[baseline["subdivisions"] == size]
-        lines.append(entry(group, rf"\(h=1/{int(size)}\)", "WG"))
+        lines.append(entry(group, rf"\(n={int(size)}\)", "WG"))
     lines.append(r"\midrule")
     for features in sorted(trials["features"].unique()):
         group = trials.loc[trials["features"] == features]
         lines.append(entry(group, rf"\(N={int(features)}\)", "RFM"))
     lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}"])
-    write_text(DATA_DIR / "experiment5_nonlinear_gpe_table.tex", "\n".join(lines))
+    write_text((output_directory or TABLE_DIR) / "experiment5_nonlinear_gpe_table.tex", "\n".join(lines))
 
 
-def build_experiment6_table() -> None:
-    """Table 9, from the timed comparison run.
+def build_experiment6_table(*, output_directory: Path | None = None) -> None:
+    """Table 6, from the timed comparison run.
 
     A GFLM--KTM entry is the median over the published initial pairs that
     converge at that mesh, since Li et al. give no rule for choosing one and
@@ -598,14 +483,14 @@ def build_experiment6_table() -> None:
     """
     baseline = pd.read_csv(DATA_DIR / "experiment6_gflm_ktm_timed.csv")
     trials = pd.read_csv(DATA_DIR / "experiment6_rfm_timed.csv")
-    baseline = baseline.loc[baseline["converged"].astype(bool)]
-    trials = trials.loc[trials["converged"].astype(bool)]
+    baseline = converged_rows(baseline)
+    trials = converged_rows(trials)
 
     def entry(group: pd.DataFrame, resolution: str, method: str) -> str:
         seconds = group["wall_seconds"]
         return (
             rf"{method} & {resolution} & "
-            rf"{seconds.median():.1f}\,[{seconds.min():.1f},{seconds.max():.1f}] & "
+            rf"{tex_time_seconds(seconds.median())} & "
             rf"\({tex_sci(group['energy_abs_error'].median())}\) & "
             rf"\({tex_sci(group['mu1_abs_error'].median())}\) & "
             rf"\({tex_sci(group['mu2_abs_error'].median())}\) & "
@@ -617,7 +502,7 @@ def build_experiment6_table() -> None:
         r"\centering",
         r"\small",
         r"\setlength{\tabcolsep}{4pt}",
-        r"\caption{Errors and computation times of GFLM--KTM and the RFM for the rotating two-component dipolar condensate. RFM entries are medians over ten independent feature draws and GFLM--KTM entries over twenty initial states from the product of the ten published ones, with the observed range in brackets.}",
+        r"\caption{Errors and computation times of GFLM--KTM and the RFM for the rotating two-component dipolar condensate. RFM entries are medians over ten independent feature draws and GFLM--KTM entries over twenty initial states from the product of the ten published ones.}",
         r"\label{tab:dipolar_bec_comparison}",
         r"\begin{tabular}{llrrrrr}",
         r"\toprule",
@@ -635,18 +520,16 @@ def build_experiment6_table() -> None:
         group = trials.loc[trials["features"] == features]
         lines.append(entry(group, rf"\(N={int(features)}\)", "RFM"))
     lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}"])
-    write_text(DATA_DIR / "experiment6_dipolar_bec_table.tex", "\n".join(lines))
+    write_text((output_directory or TABLE_DIR) / "experiment6_dipolar_bec_table.tex", "\n".join(lines))
 
 
 
 def main() -> None:
     FIG_DIR.mkdir(parents=True, exist_ok=True)
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    TABLE_DIR.mkdir(parents=True, exist_ok=True)
     use_plot_style()
     plot_experiment1()
     build_experiment2_table()
-    plot_experiment2()
-    build_experiment3_table()
     plot_experiment3()
     build_experiment4_assets()
     # the five-panel appendix figure this used to build was split in two and is

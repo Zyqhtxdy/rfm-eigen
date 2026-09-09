@@ -5,11 +5,9 @@
 # seconds, and a different truncation driver can move the retained rank by a few
 # directions at the 1e-12 threshold.  Pinning is therefore not pedantry here.
 #
-# Install the packages themselves with
-#
-#     python -m pip install -e .              # Experiments 1, 3, 4 and the assets
-#     python -m pip install -e ./rfm_eigen    # the six experiments and baselines
-#     python -m pip install -e ./nonlinear_eigen_rfm_study
+# Run from the code directory:
+#     python -m pip install -r requirements.txt
+#     python -m pip install -e . --no-deps
 #
 # python 3.12.13
 
@@ -17,6 +15,7 @@ numpy==2.5.1
 scipy==1.18.0
 matplotlib==3.10.8
 pandas==3.0.1
+threadpoolctl==3.5.0
 
 # the isoparametric P2 finite element baseline of Experiment 2
 scikit-fem==12.0.1

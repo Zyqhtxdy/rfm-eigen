@@ -1,51 +1,12 @@
-r"""Example 2 (Section 4.1): a radially graded problem on the unit ball.
+r"""Example 2: the radially graded unit ball, a(r) = 1 + 3 r^2.
 
-The operator is :math:`-\nabla\cdot(a(|x|)\nabla u)=\lambda u` with
-:math:`a(r)=1+3r^2`, the problem of :mod:`rfmeig.problems.graded_ball`.  Two of
-the first ten levels are multiple -- threefold and fivefold -- and a simple
-level sits between them, within 2.4 percent of the fivefold one, so the ordered
-Ritz indices of both clusters have to be found across a close neighbour.  The
-exact levels come from the one-dimensional radial problems that separation of
-variables produces, so no reference is extrapolated and none of them is
-computed by any of the three methods being compared.
+Compare the first ten eigenvalues using conforming random features,
+isoparametric P2 finite elements, and Bernstein Eig-PIELM collocation.
+The reference spectrum is computed independently from the radial equations.
 
-What the experiment measures is the whole cost-accuracy curve of three methods
-on one problem, one machine and one clock:
-
-``RFM``
-    the conforming sampled space of Section 2.3, with the boundary factor
-    :math:`\eta(x)=1-|x|^2`;
-``P2 FEM``
-    isoparametric quadratic finite elements, boundary edge midpoints projected
-    onto the sphere (:mod:`rfmeig.baselines.isoparametric_fem`);
-``Eig-PIELM``
-    Bernstein collocation with an algebraic boundary-admissible projection
-    (:mod:`rfmeig.baselines.eig_pielm`).
-
-The tuning is deliberately asymmetric, and against us.  Each baseline is scored
-at the setting that minimizes its own error, while the frequency scale of the
-sampled space is fixed by a rule that never reads an exact eigenvalue: among the
-candidate scales, the one whose Ritz values move least between two independent
-draws of the same size.  A method that only won because it had been tuned on the
-answer would not survive that.
-
-Three quantities are recorded per configuration:
-
-``median_error``
-    the largest relative error over the first ten ordered levels, at the median
-    over independent draws, with the observed range;
-``median_seconds``
-    the median wall clock over repeated solves of the same configuration;
-``clusters``
-    for each multiple level, how many draws placed it at the correct ordered
-    Ritz indices, and how wide it came out relative to its separation from the
-    neighbouring levels.
-
-The last one is what Lemma 3.3 is about.  At the smallest budget the threshold
-it requires is not met, and the identification fails in half the draws; that
-row is reported rather than dropped.
-
-Run with::
+The RFM frequency scale is selected by agreement between two independent
+feature draws. Every configuration records errors, timed repetitions, and
+identification of the multiple levels. Completed configurations can be resumed.
 
     RFMEIG_THREADS=6 python -m rfmeig.experiments.exp2_graded_ball --run-id my-run
 """
@@ -55,6 +16,7 @@ from __future__ import annotations
 import argparse
 import functools
 import time
+import warnings
 from typing import Any
 
 import numpy as np
@@ -125,7 +87,8 @@ def select_scale_blind(
                 ).values
                 for seed in probe_seeds
             ]
-        except Exception:
+        except (np.linalg.LinAlgError, RuntimeError) as error:
+            warnings.warn(f"scale {scale:g} could not be solved: {error}", RuntimeWarning, stacklevel=2)
             continue
         discrepancy = float(np.max(np.abs(runs[0] - runs[1]) / np.abs(runs[0])))
         if discrepancy < best_discrepancy:
@@ -236,7 +199,7 @@ def fem_row(domain, subdivisions, count, repeats):
     )
     return {
         "method": "P2 FEM",
-        "setting": f"h=1/{subdivisions}",
+        "setting": f"n={subdivisions}",
         "subdivisions": subdivisions,
         "degrees_of_freedom": result.dimension,
         "median_error": float(np.max(np.abs(result.values - exact) / exact)),
@@ -262,8 +225,8 @@ def pielm_row(domain, degree, grid, count, repeats):
             ),
             repeats,
         )
-    except Exception:
-        return None
+    except (np.linalg.LinAlgError, RuntimeError) as error:
+        raise RuntimeError(f"Eig-PIELM deg={degree}, grid={grid} failed") from error
     error = (
         float("inf")
         if len(result.values) < count
@@ -303,7 +266,7 @@ def verdict(rows) -> dict[str, Any]:
             if row["method"] == name and np.isfinite(row["median_error"])
         ]
         if not group:
-            summary[name] = {"beaten": True, "reason": "no converged baseline point"}
+            summary[name] = {"beaten": False, "reason": "no converged baseline point"}
             continue
         best = min(group, key=lambda row: row["median_error"])
         cheaper = [r for r in ours if r["median_error"] <= best["median_error"]]
@@ -322,7 +285,7 @@ def verdict(rows) -> dict[str, Any]:
             "beaten": bool(
                 matched is not None
                 and best_ours["median_error"] < best["median_error"]
-                and best_ours["median_seconds"] < best["median_seconds"]
+                and matched["median_seconds"] < best["median_seconds"]
             ),
         }
     return summary
@@ -358,6 +321,7 @@ def quadrature_sensitivity(domain, features, scale, levels, count, seed=1):
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--run-id", default=None)
+    parser.add_argument("--resume", action="store_true")
     parser.add_argument("--count", type=int, default=DEFAULT_COUNT)
     parser.add_argument("--draws", type=int, default=DEFAULT_DRAWS)
     parser.add_argument("--repeats", type=int, default=DEFAULT_REPEATS)
@@ -382,15 +346,20 @@ def main(argv: list[str] | None = None) -> None:
         "rfm": [list(item) for item in DEFAULT_RFM],
         "threads": args.threads,
     }
-    run = provenance.open_run("exp2_graded_ball", config=config, run_id=args.run_id)
+    run = provenance.open_run("experiment2", config=config, run_id=args.run_id, resume=args.resume)
     started = time.perf_counter()
 
     exact = domain.exact_ordered(count)
     print("exact: " + " ".join(f"{value:.8f}" for value in exact), flush=True)
 
-    scale, discrepancy = select_scale_blind(
-        domain, SCALE_PROBE[0], SCALE_PROBE[1], DEFAULT_SCALES, count
-    )
+    tuning = run.completed("scale_selection")
+    if tuning is None:
+        scale, discrepancy = select_scale_blind(
+            domain, SCALE_PROBE[0], SCALE_PROBE[1], DEFAULT_SCALES, count
+        )
+        run.complete("scale_selection", {"scale": scale, "discrepancy": discrepancy})
+    else:
+        scale, discrepancy = tuning["scale"], tuning["discrepancy"]
     print(
         f"blind scale selection: {scale:g} "
         f"(draw-to-draw {discrepancy:.2e}); the baselines are tuned per setting",
@@ -399,7 +368,10 @@ def main(argv: list[str] | None = None) -> None:
 
     rows: list[dict[str, Any]] = []
     for subdivisions in DEFAULT_FEM:
-        row = fem_row(domain, subdivisions, count, args.repeats)
+        call_id = f"fem_n{subdivisions}"
+        row = run.completed(call_id)
+        if row is None:
+            row = run.complete(call_id, fem_row(domain, subdivisions, count, args.repeats))
         rows.append(row)
         print(
             f"  P2 FEM     {row['setting']:9s} dof={row['degrees_of_freedom']:7d} "
@@ -407,9 +379,10 @@ def main(argv: list[str] | None = None) -> None:
             flush=True,
         )
     for degree, grid in DEFAULT_PIELM:
-        row = pielm_row(domain, degree, grid, count, args.repeats)
+        call_id = f"pielm_degree{degree}_grid{grid}"
+        row = run.completed(call_id)
         if row is None:
-            continue
+            row = run.complete(call_id, pielm_row(domain, degree, grid, count, args.repeats))
         rows.append(row)
         print(
             f"  Eig-PIELM  {row['setting']:9s} adm={row['admissible']:7d} "
@@ -417,7 +390,10 @@ def main(argv: list[str] | None = None) -> None:
             flush=True,
         )
     for features, level in DEFAULT_RFM:
-        row = rfm_row(domain, features, scale, level, seeds, count, args.repeats)
+        call_id = f"rfm_N{features}_q{level}"
+        row = run.completed(call_id)
+        if row is None:
+            row = run.complete(call_id, rfm_row(domain, features, scale, level, seeds, count, args.repeats))
         rows.append(row)
         print(
             f"  RFM        {row['setting']:9s} ret={row['median_retained']:7.0f} "
@@ -432,9 +408,12 @@ def main(argv: list[str] | None = None) -> None:
 
     scored = verdict(rows)
     largest = DEFAULT_RFM[-1]
-    sensitivity = quadrature_sensitivity(
-        domain, largest[0], scale, (largest[1], largest[1] + 6, largest[1] + 14), count
-    )
+    sensitivity_record = run.completed("quadrature_sensitivity")
+    if sensitivity_record is None:
+        sensitivity_record = run.complete("quadrature_sensitivity", {"rows": quadrature_sensitivity(
+            domain, largest[0], scale, (largest[1], largest[1] + 6, largest[1] + 14), count
+        )})
+    sensitivity = sensitivity_record["rows"]
     passed = all(item.get("beaten") for item in scored.values())
 
     provenance.write_json(
@@ -456,10 +435,12 @@ def main(argv: list[str] | None = None) -> None:
             "quadrature_sensitivity": sensitivity,
             "passed": passed,
         },
+        overwrite=True,
     )
     provenance.write_csv(run.path("rows.csv"), [
         {k: v for k, v in row.items() if not isinstance(v, list)} for row in rows
     ])
+    run.seal(rows=len(rows), comparison_passed=passed)
     print(
         f"verdict: {'PASS' if passed else 'FAIL'}  "
         f"[{time.perf_counter() - started:.0f}s]  -> {run.directory}",

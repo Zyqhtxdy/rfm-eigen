@@ -5,7 +5,7 @@ code that produced it, the configuration, the seeds, and the wall times. The six
 experiments previously each carried their own copy of this machinery; it is
 collected here so that a run of any of them is laid out the same way.
 
-A run is a directory under ``rfm_eigen_data/<experiment>/<run id>``. It is
+A run is a directory under ``output/<experiment>/<run id>``. It is
 *sealed* once ``seal`` has been called, after which it is never modified: a
 second attempt to write into it raises rather than overwriting recorded numbers.
 An interrupted run can be resumed, because each call writes its own completion
@@ -32,7 +32,7 @@ PACKAGE_ROOT = Path(__file__).resolve().parent
 #: A rerun writes here.  The recorded output the paper was written
 #: from is in ``code/data``; this is kept separate so that a rerun
 #: cannot quietly overwrite it.
-DATA_ROOT = PACKAGE_ROOT.parents[1] / "output"
+DATA_ROOT = Path(os.environ.get("RFMEIG_RUN_ROOT", PACKAGE_ROOT.parents[1] / "output")).resolve()
 
 _SEAL = "output_manifest.json"
 
@@ -71,7 +71,13 @@ def hash_source() -> str:
 # --------------------------------------------------------------------------
 # atomic writes
 # --------------------------------------------------------------------------
+def _assert_unsealed(path: Path) -> None:
+    if any((parent / _SEAL).exists() for parent in path.resolve().parents):
+        raise RuntimeError(f"cannot write inside a sealed run: {path}")
+
+
 def write_json(path: Path, value: Any, *, overwrite: bool = False) -> None:
+    _assert_unsealed(path)
     if path.exists() and not overwrite:
         raise FileExistsError(f"refusing to overwrite {path}")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -84,6 +90,7 @@ def write_json(path: Path, value: Any, *, overwrite: bool = False) -> None:
 
 
 def write_npz(path: Path, **arrays: Any) -> None:
+    _assert_unsealed(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     scratch = path.with_suffix(".npz.partial")
     with scratch.open("wb") as handle:
@@ -95,6 +102,7 @@ def write_csv(path: Path, rows: Iterable[Mapping[str, Any]]) -> None:
     """Write a table whose columns are the union of the keys, in first-seen order."""
     import csv
 
+    _assert_unsealed(path)
     rows = list(rows)
     if not rows:
         raise ValueError(f"no rows for {path}")
@@ -129,12 +137,17 @@ class Run:
         return (self.directory / _SEAL).exists()
 
     def path(self, *parts: str) -> Path:
-        target = self.directory.joinpath(*parts)
+        if self.sealed:
+            raise RuntimeError(f"{self.directory} is sealed and cannot be modified")
+        target = self.directory.joinpath(*parts).resolve()
+        if not target.is_relative_to(self.directory.resolve()):
+            raise ValueError("run output must stay inside the run directory")
         target.parent.mkdir(parents=True, exist_ok=True)
         return target
 
     # -- per-call completion markers, so an interrupted run can be resumed ---
     def _marker(self, call_id: str) -> Path:
+        _directory_name(call_id)
         return self.directory / "calls" / f"{call_id}.json"
 
     def completed(self, call_id: str) -> dict[str, Any] | None:
@@ -144,9 +157,11 @@ class Run:
         return json.loads(marker.read_text(encoding="utf-8"))
 
     def complete(self, call_id: str, row: Mapping[str, Any]) -> dict[str, Any]:
+        if self.sealed:
+            raise RuntimeError(f"{self.directory} is sealed and cannot be modified")
         record = dict(row)
         record.setdefault("recorded_at", time.time())
-        write_json(self._marker(call_id), record, overwrite=True)
+        write_json(self._marker(call_id), record)
         return record
 
     def seal(self, **summary: Any) -> None:
@@ -170,6 +185,11 @@ class Run:
         )
 
 
+def _directory_name(value: str) -> None:
+    if not value or value in {".", ".."} or any(c in value for c in '/\\:'):
+        raise ValueError(f"expected a single directory or call name: {value!r}")
+
+
 def open_run(
     experiment: str,
     *,
@@ -178,9 +198,11 @@ def open_run(
     resume: bool = False,
 ) -> Run:
     """Create, or reopen, the directory that a run writes into."""
+    _directory_name(experiment)
     root = DATA_ROOT / experiment
     if run_id is None:
         run_id = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+    _directory_name(run_id)
     directory = root / run_id
     code = hash_source()
 
@@ -212,6 +234,7 @@ def open_run(
                 "config_sha256": hash_bytes(canonical_json(dict(config)).encode()),
                 "python": sys.version.split()[0],
                 "numpy": np.__version__,
+                "libraries": _library_versions(),
                 "platform": platform.platform(),
                 "processor": platform.processor(),
                 "host": socket.gethostname(),
@@ -273,7 +296,28 @@ def require_threads(count: int) -> int:
             f"set it in the environment before starting, for example "
             f"RFMEIG_THREADS={count}"
         )
+    from threadpoolctl import threadpool_info
+
+    wrong = [f"{pool['prefix']}={pool['num_threads']}" for pool in threadpool_info()
+             if pool.get("num_threads") != int(count)]
+    if wrong:
+        raise RuntimeError(
+            "loaded numerical thread pools disagree with --threads: " + ", ".join(wrong)
+            + "; set RFMEIG_THREADS and the BLAS/OpenMP thread variables before starting Python"
+        )
     return int(PINNED_THREADS)
+
+
+def _library_versions() -> dict[str, str]:
+    from importlib.metadata import PackageNotFoundError, version
+
+    versions = {}
+    for name in ("scipy", "pandas", "torch", "scikit-fem", "threadpoolctl"):
+        try:
+            versions[name] = version(name)
+        except PackageNotFoundError:
+            continue
+    return versions
 
 
 def quantile_summary(
